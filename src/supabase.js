@@ -32,23 +32,15 @@ function collectSupabaseEnvIssues() {
   if (!key) {
     issues.push('VITE_SUPABASE_ANON_KEY está vazio — copie a chave anon/public em Project Settings → API.');
   } else {
-    const jwtParts = key.split('.');
-    if (jwtParts.length !== 3) {
+    const isJwtLike = key.split('.').length === 3 && key.startsWith('eyJ');
+    const isPublishableLike = key.startsWith('sb_publishable_');
+    if (!isJwtLike && !isPublishableLike) {
       issues.push(
-        'VITE_SUPABASE_ANON_KEY não parece um JWT válido (esperadas 3 partes separadas por "."). Verifique se copiou a chave completa.'
-      );
-    } else if (key.length < 100) {
-      issues.push(
-        'VITE_SUPABASE_ANON_KEY parece curta demais para uma chave anon do Supabase — confirme que colou a totalidade.'
+        'VITE_SUPABASE_ANON_KEY não parece válida. Use a chave \"anon/public\" em Project Settings → API (formato JWT antigo ou sb_publishable_ novo).'
       );
     }
     if (/placeholder|your-anon-key|changeme/i.test(key)) {
       issues.push('VITE_SUPABASE_ANON_KEY parece um placeholder — substitua pela chave real do projeto.');
-    }
-    if (!key.startsWith('eyJ')) {
-      issues.push(
-        'VITE_SUPABASE_ANON_KEY não começa por "eyJ" (formato JWT). Confirme que colou a chave "anon public" e não a service_role.'
-      );
     }
   }
 

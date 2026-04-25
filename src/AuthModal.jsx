@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase, supabaseEnvIssues } from './supabase';
+import { supabase } from './supabase';
 
 function formatSupabaseError(err) {
   if (err == null) return 'Erro desconhecido.';
@@ -109,10 +109,7 @@ export default function AuthModal({ isOpen, onClose, onLogin, defaultMode = 'log
       setFormData(emptyForm());
       setAuthSuccess('');
     } catch (err) {
-      const base = formatSupabaseError(err);
-      const envHint =
-        supabaseEnvIssues.length > 0 ? `\n\nVerifique o .env:\n- ${supabaseEnvIssues.join('\n- ')}` : '';
-      setAuthError(`${base}${envHint}`);
+      setAuthError(formatSupabaseError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -294,17 +291,6 @@ export default function AuthModal({ isOpen, onClose, onLogin, defaultMode = 'log
                       ? 'Estes dados são opcionais e não impedem o registo.'
                       : 'Indique nome, email e palavra-passe para criar a conta.'}
                 </p>
-
-                {supabaseEnvIssues.length > 0 && (
-                  <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                    <p className="font-semibold mb-1">Configuração Supabase (VITE_*)</p>
-                    <ul className="list-disc pl-4 space-y-1">
-                      {supabaseEnvIssues.map((msg) => (
-                        <li key={msg}>{msg}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 {authSuccess && (
                   <div
