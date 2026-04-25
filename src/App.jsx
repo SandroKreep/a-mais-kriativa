@@ -6,6 +6,7 @@ import ProductCard from './ProductCard';
 import ProductModal from './ProductModal';
 import AuthModal from './AuthModal';
 import SellerDashboard from './SellerDashboard';
+import AdminPage from './AdminPage';
 import { supabase } from './supabase';
 import productsData from './mockData.json';
 import { formatPriceKZA } from './utils/formatPrice';
@@ -129,6 +130,7 @@ function matchesNavCategory(product, selectedCategory) {
 }
 
 function App() {
+  const isAdminRoute = window.location.pathname === '/admin';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -185,6 +187,37 @@ function App() {
     [mapCategoryToLabel]
   );
 
+  const mapRowsWithSellerInfo = useCallback(
+    async (rows) => {
+      const rawRows = rows ?? [];
+      if (!rawRows.length) return [];
+
+      const userIds = [...new Set(rawRows.map((row) => row.usuario_id).filter(Boolean))];
+      if (!userIds.length) {
+        return rawRows.map(mapSupabaseRowToProduct);
+      }
+
+      const { data: sellers, error: sellersError } = await supabase
+        .from('usuarios')
+        .select('id, email, telefone, whatsapp, localizacao')
+        .in('id', userIds);
+
+      if (sellersError) {
+        console.error('Erro ao carregar dados dos vendedores:', sellersError);
+        return rawRows.map(mapSupabaseRowToProduct);
+      }
+
+      const sellerById = Object.fromEntries((sellers ?? []).map((seller) => [seller.id, seller]));
+      const hydratedRows = rawRows.map((row) => ({
+        ...row,
+        vendedor: sellerById[row.usuario_id] ?? null,
+      }));
+
+      return hydratedRows.map(mapSupabaseRowToProduct);
+    },
+    [mapSupabaseRowToProduct]
+  );
+
   const fetchUserProfile = async (userId) => {
     const { data, error } = await supabase
       .from('usuarios')
@@ -239,7 +272,7 @@ function App() {
 
       const { data, error } = await supabase
         .from('produtos')
-        .select('*, vendedor:usuarios(email, telefone, whatsapp, localizacao)')
+        .select('*')
         .order('criado_em', { ascending: false });
 
       window.clearTimeout(timeoutId);
@@ -254,7 +287,8 @@ function App() {
         console.error('Erro ao carregar produtos:', error);
         setSupabaseProducts([]);
       } else {
-        setSupabaseProducts((data ?? []).map(mapSupabaseRowToProduct));
+        const mapped = await mapRowsWithSellerInfo(data ?? []);
+        setSupabaseProducts(mapped);
       }
       setIsLoadingSupabaseProducts(false);
     };
@@ -265,7 +299,7 @@ function App() {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [mapSupabaseRowToProduct]);
+  }, [mapRowsWithSellerInfo]);
 
   const allProducts = useMemo(
     () => [...supabaseProducts, ...staticProducts],
@@ -323,6 +357,13 @@ function App() {
   const handleOpenModal = (product) => {
     setSelectedProduct(product);
     setIsModalOpen(true);
+    if (!product?.isStatic && product?.sourceId) {
+      supabase.from('visualizacoes_produto').insert({ produto_id: product.sourceId }).then(({ error }) => {
+        if (error) {
+          console.warn('Falha ao registar visualização de produto:', error.message);
+        }
+      });
+    }
   };
 
   const handleCloseModal = () => {
@@ -362,7 +403,7 @@ function App() {
     const insertResult = await supabase
       .from('produtos')
       .insert(insertPayload)
-      .select('*, vendedor:usuarios(email, telefone, whatsapp, localizacao)')
+      .select('*')
       .maybeSingle();
 
     console.log('Resultado do insert em produtos:', insertResult);
@@ -374,7 +415,8 @@ function App() {
     }
 
     if (insertedRow) {
-      const mapped = mapSupabaseRowToProduct(insertedRow);
+      const [mapped] = await mapRowsWithSellerInfo([insertedRow]);
+      if (!mapped) return;
       setSupabaseProducts((prev) => {
         if (prev.some((p) => p.sourceId === mapped.sourceId)) return prev;
         return [mapped, ...prev];
@@ -384,10 +426,11 @@ function App() {
 
     const { data: products } = await supabase
       .from('produtos')
-      .select('*, vendedor:usuarios(email, telefone, whatsapp, localizacao)')
+      .select('*')
       .order('criado_em', { ascending: false });
 
-    setSupabaseProducts((products ?? []).map(mapSupabaseRowToProduct));
+    const mapped = await mapRowsWithSellerInfo(products ?? []);
+    setSupabaseProducts(mapped);
   };
 
   const handleDeleteProduct = async (product) => {
@@ -527,6 +570,19 @@ function App() {
       transition: { duration: 0.5 },
     },
   };
+
+  useEffect(() => {
+    if (isAdminRoute) return;
+    supabase.from('acessos_site').insert({ pagina: window.location.pathname }).then(({ error }) => {
+      if (error) {
+        console.warn('Falha ao registar acesso:', error.message);
+      }
+    });
+  }, [isAdminRoute]);
+
+  if (isAdminRoute) {
+    return <AdminPage />;
+  }
 
   return (
     <div className="app-container min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">

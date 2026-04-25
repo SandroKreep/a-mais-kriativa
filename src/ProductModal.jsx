@@ -10,7 +10,10 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
   const discount =
     original > 0 && original > price ? Math.round(((original - price) / original) * 100) : 0;
   const whatsappNumber = (product.whatsapp || '').replace(/\D/g, '');
-  const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}` : null;
+  const whatsappMessage = `Olá! Tenho interesse no produto "${product.name}" por ${formatPriceKZA(price)}.`;
+  const whatsappUrl = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
+    : null;
 
   return (
     <AnimatePresence>
@@ -148,7 +151,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
                       rel="noreferrer"
                       className="mt-3 inline-block rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700 transition"
                     >
-                      Comprar via WhatsApp
+                      Comprar pelo WhatsApp
                     </a>
                   )}
                 </div>
