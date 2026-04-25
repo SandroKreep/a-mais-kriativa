@@ -1,0 +1,242 @@
+{
+  "services": [
+    {
+      "id": 1,
+      "name": "Criação de Sites",
+      "price": 1020000,
+      "image": "https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=500&h=500&fit=crop",
+      "description": "Desenvolvimento de sites profissionais, responsivos e otimizados para SEO. Incluindo design, programação e hospedagem.",
+      "features": ["Design responsivo", "SEO otimizado", "API integração", "Dashboard admin"],
+      "rating": 4.9
+    },
+    {
+      "id": 2,
+      "name": "Reparação de Informática",
+      "price": 102000,
+      "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=500&fit=crop",
+      "description": "Diagnóstico e conserto de computadores, notebooks e periféricos. Limpeza, troca de peças e atualização de software.",
+      "features": ["Diagnóstico grátis", "Garantia em reparos", "Atendimento rápido", "Backup de dados"],
+      "rating": 4.7
+    },
+    {
+      "id": 3,
+      "name": "Instalação de Software",
+      "price": 81600,
+      "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&h=500&fit=crop",
+      "description": "Instalação completa de sistemas operacionais, antivírus e programas profissionais com suporte técnico.",
+      "features": ["Windows/Linux", "Antivírus premium", "Programas profissionais", "Suporte 1 ano"],
+      "rating": 4.6
+    },
+    {
+      "id": 4,
+      "name": "Consultoria de TI",
+      "price": 170000,
+      "image": "https://images.unsplash.com/photo-1552664730-d307ca884978?w=500&h=500&fit=crop",
+      "description": "Assessoria em infraestrutura, segurança de redes e modernização de sistemas empresariais.",
+      "features": ["Análise de risco", "Segurança de dados", "Cloud computing", "Suporte 24/7"],
+      "rating": 4.8
+    }
+  ],
+  "customProducts": [
+    {
+      "id": 1,
+      "name": "Canecas Personalizadas",
+      "basePrice": 23800,
+      "image": "https://images.unsplash.com/photo-1514432324607-2e467f4af445?w=500&h=500&fit=crop",
+      "description": "Canecas de cerâmica com impressão personalizada em alta qualidade. Perfeitas para presentes corporativos.",
+      "customizations": ["Foto/Logo", "Texto", "Cores ilimitadas"],
+      "leadTime": "3-5 dias",
+      "minOrder": 10,
+      "rating": 4.9
+    },
+    {
+      "id": 2,
+      "name": "Camisetas Personalizadas",
+      "basePrice": 30600,
+      "image": "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=500&fit=crop",
+      "description": "Camisetas 100% algodão com estampa personalizada. Ideal para eventos, time ou marca pessoal.",
+      "customizations": ["Frente/Costas", "Bolso", "Paleta completa"],
+      "leadTime": "5-7 dias",
+      "minOrder": 5,
+      "rating": 4.8
+    },
+    {
+      "id": 3,
+      "name": "Canetas Personalizadas",
+      "basePrice": 5440,
+      "image": "https://images.unsplash.com/photo-1606192100628-e1d37b31367d?w=500&h=500&fit=crop",
+      "description": "Canetas premium com gravação de logo ou mensagem. Excelente para brinde corporativo.",
+      "customizations": ["Gravação laser", "Cores metálicas", "Elegante"],
+      "leadTime": "2-3 dias",
+      "minOrder": 50,
+      "rating": 4.7
+    },
+    {
+      "id": 4,
+      "name": "Mochilas Personalizadas",
+      "basePrice": 44200,
+      "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
+      "description": "Mochilas em nylon resistente com logo bordado ou estampado. Perfeitas para branding.",
+      "customizations": ["Bordado", "Estampa", "Múltiplos compartimentos"],
+      "leadTime": "7-10 dias",
+      "minOrder": 20,
+      "rating": 4.9
+    },
+    {
+      "id": 5,
+      "name": "Botons/Badges",
+      "basePrice": 2040,
+      "image": "https://images.unsplash.com/photo-1535556311336-ab7746592ffc?w=500&h=500&fit=crop",
+      "description": "Botões personalizados em várias formas e tamanhos. Ótimo para eventos e campanhas.",
+      "customizations": ["Redondo/Quadrado", "Tamanhos variados", "Design próprio"],
+      "leadTime": "2-4 dias",
+      "minOrder": 100,
+      "rating": 4.6
+    },
+    {
+      "id": 6,
+      "name": "Squeezes Personalizados",
+      "basePrice": 17000,
+      "image": "https://images.unsplash.com/photo-1609654409698-4b7a87fe93dd?w=500&h=500&fit=crop",
+      "description": "Garrafas squeeze em plástico resistente com logo ou design personalizado.",
+      "customizations": ["Gravura", "Cores", "Capacidade 500-750ml"],
+      "leadTime": "4-6 dias",
+      "minOrder": 15,
+      "rating": 4.8
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "MacBook Pro 16\"",
+      "price": 2499,
+      "originalPrice": 2799,
+      "image": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500&h=500&fit=crop",
+      "category": "Laptops",
+      "rating": 4.8,
+      "description": "MacBook Pro com processador M2 Pro, 16GB RAM e 512GB SSD. Perfeito para profissionais de design e desenvolvimento.",
+      "link": "#"
+    },
+    {
+      "id": 2,
+      "name": "iPad Air",
+      "price": 699,
+      "originalPrice": 799,
+      "image": "https://images.unsplash.com/photo-1527814050087-3793815479db?w=500&h=500&fit=crop",
+      "category": "Tablets",
+      "rating": 4.7,
+      "description": "iPad Air com tela Liquid Retina de 11 polegadas, chip M1 e suporte para Apple Pencil.",
+      "link": "#"
+    },
+    {
+      "id": 3,
+      "name": "iPhone 15 Pro",
+      "price": 1099,
+      "originalPrice": 1199,
+      "image": "https://images.unsplash.com/photo-1592286927505-1def25115558?w=500&h=500&fit=crop",
+      "category": "Smartphones",
+      "rating": 4.9,
+      "description": "iPhone 15 Pro com câmera avançada, processador A17 e design de titânio. Edição máxima de desempenho.",
+      "link": "#"
+    },
+    {
+      "id": 4,
+      "name": "Sony WH-1000XM5",
+      "price": 399,
+      "originalPrice": 449,
+      "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
+      "category": "Áudio",
+      "rating": 4.8,
+      "description": "Fones de ouvido over-ear com cancelamento de ruído líder, 30 horas de bateria e som premium.",
+      "link": "#"
+    },
+    {
+      "id": 5,
+      "name": "Dell XPS 13",
+      "price": 999,
+      "originalPrice": 1099,
+      "image": "https://images.unsplash.com/photo-1588872657840-3c0e2aed0a8f?w=500&h=500&fit=crop",
+      "category": "Laptops",
+      "rating": 4.6,
+      "description": "Laptop ultraportátil com Intel Core i7, tela 4K e design compacto. Ideal para profissionais em movimento.",
+      "link": "#"
+    },
+    {
+      "id": 6,
+      "name": "Samsung Galaxy Watch5",
+      "price": 249,
+      "originalPrice": 299,
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+      "category": "Wearables",
+      "rating": 4.5,
+      "description": "Relógio inteligente com monitoramento de saúde avançado, bateria de 2 dias e design elegante.",
+      "link": "#"
+    },
+    {
+      "id": 7,
+      "name": "Google Pixel 8",
+      "price": 799,
+      "originalPrice": 899,
+      "image": "https://images.unsplash.com/photo-1628505092646-12695e1f29b6?w=500&h=500&fit=crop",
+      "category": "Smartphones",
+      "rating": 4.7,
+      "description": "Smartphone com câmera IA revolucionária, processador Tensor e exibição OLED de 120Hz.",
+      "link": "#"
+    },
+    {
+      "id": 8,
+      "name": "AirPods Pro",
+      "price": 249,
+      "originalPrice": 299,
+      "image": "https://images.unsplash.com/photo-1606841836934-ffe82ba90e61?w=500&h=500&fit=crop",
+      "category": "Áudio",
+      "rating": 4.6,
+      "description": "Fones de ouvido true wireless com cancelamento adaptativo e modo transparência.",
+      "link": "#"
+    },
+    {
+      "id": 9,
+      "name": "Lenovo ThinkPad X1",
+      "price": 1299,
+      "originalPrice": 1499,
+      "image": "https://images.unsplash.com/photo-1588872657840-3c0e2aed0a8f?w=500&h=500&fit=crop",
+      "category": "Laptops",
+      "rating": 4.7,
+      "description": "Laptop robusto para negócios com processador Intel Core i7, durabilidade MIL-SPEC e bateria de até 15h.",
+      "link": "#"
+    },
+    {
+      "id": 10,
+      "name": "GoPro Hero 12",
+      "price": 449,
+      "originalPrice": 549,
+      "image": "https://images.unsplash.com/photo-1606986628025-35d57e735ae0?w=500&h=500&fit=crop",
+      "category": "Câmeras",
+      "rating": 4.8,
+      "description": "Câmera de ação 5.3K, resistente à água até 33m e com tela frontal opcional.",
+      "link": "#"
+    },
+    {
+      "id": 11,
+      "name": "Apple Watch Series 9",
+      "price": 399,
+      "originalPrice": 499,
+      "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+      "category": "Wearables",
+      "rating": 4.8,
+      "description": "Relógio inteligente com tela Retina always-on, monitoramento de saúde completo e bateria de 18h.",
+      "link": "#"
+    },
+    {
+      "id": 12,
+      "name": "Microsoft Surface Pro 10",
+      "price": 1299,
+      "originalPrice": 1449,
+      "image": "https://images.unsplash.com/photo-1560080876-daf8d9ec4c5f?w=500&h=500&fit=crop",
+      "category": "Tablets",
+      "rating": 4.6,
+      "description": "Tablet híbrido com processador Intel Core Ultra, pen support e múltiplas portas.",
+      "link": "#"
+    }
+  ]
+}

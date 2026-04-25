@@ -1,0 +1,176 @@
+/* ====================== RESET & BASE ====================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f8fafc; 
+    color: #1e2937;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* ====================== CORES PRINCIPAIS ====================== */
+:root {
+    --primary: #0066FF;     /* Azul Tech */
+    --primary-dark: #0052cc;
+    --accent: #10b981;      /* Verde para preços/descontos */
+    --bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text: #1e2937;
+    --text-light: #64748b;
+}
+
+/* ====================== ANIMAÇÕES GLOBAIS ====================== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Transições otimizadas */
+.btn-login,
+.btn-submit,
+.action-btn,
+.card,
+.investment-card,
+.education-card,
+.tip-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity;
+}
+
+    
+/* ====================== APP LAYOUT ====================== */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex: 1;
+    padding: 2rem;
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* ====================== CARDS & MICRO-INTERAÇÕES ====================== */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 1.8rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--primary);
+    box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.2);
+}
+
+.card.income h3 { color: #4ade80; }
+.card.expenses h3 { color: #f87171; }
+.card.savings h3 { color: #60a5fa; }
+
+/* Dashboard cards e seções */
+.dashboard-card,
+.budget-form-card,
+.savings-form-card,
+.investment-card,
+.education-card,
+.tip-card,
+.resource-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 1.8rem;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.investment-card:hover,
+.education-card:hover,
+.tip-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* ====================== BOTÕES DE AÇÃO ====================== */
+.action-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(0, 102, 255, 0.1);
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    background: var(--primary);
+    color: #0f172a;
+    transform: scale(1.05);
+}
+
+/* Reset global para evitar que botões virem blocos e quebrem o layout */
+button {
+    display: inline-flex !important;
+    align-items: center;
+    vertical-align: middle;
+    text-align: center;
+}
+
+/* ====================== TABELAS ====================== */
+.table-container {
+    background: var(--card-bg);
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #334155;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #1e2937;
+    padding: 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+td {
+    padding: 16px;
+    border-top: 1px solid #334155;
+}
+
+/* ====================== RESPONSIVIDADE ====================== */
+/* ====================== SCROLL SUAVE & PARALLAX ====================== */
+/* Lenis cuida do scroll, mas podemos adicionar parallax sutil via CSS */
+.parallax-bg {
+    background-attachment: fixed;
+    background-position: center;
+}
+
+/* Dicas extras para performance */
+.card, .btn-login, input, select {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
