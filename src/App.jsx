@@ -759,8 +759,18 @@ function App() {
             </div>
             <div>
               <h3 className="font-bold text-white mb-4">Contacto</h3>
-              <p className="text-xs sm:text-sm">Email: contato@akritativa.com</p>
-              <p className="text-xs sm:text-sm">Fone: +244 9XX XXX XXX</p>
+              <p className="text-xs sm:text-sm">
+                Email:{' '}
+                <a href="mailto:Sandrobutler284@gmail.com" className="hover:text-primary transition">
+                  Sandrobutler284@gmail.com
+                </a>
+              </p>
+              <p className="text-xs sm:text-sm">
+                Fone:{' '}
+                <a href="tel:+244947006090" className="hover:text-primary transition">
+                  +244 947006090
+                </a>
+              </p>
             </div>
           </div>
           <div className="border-t border-gray-700 pt-8 text-center text-xs sm:text-sm">
