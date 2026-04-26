@@ -39,3 +39,18 @@ export async function uploadProductImageFile(file, userId) {
   const { data } = supabase.storage.from(PRODUTOS_IMAGENS_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
+
+/**
+ * Faz upload de múltiplas imagens e devolve lista de URLs públicas.
+ */
+export async function uploadProductImageFiles(files, userId) {
+  const fileList = Array.isArray(files) ? files : [];
+  if (!fileList.length) {
+    throw new Error('Selecione pelo menos uma imagem.');
+  }
+
+  const uploadedUrls = await Promise.all(
+    fileList.map((file) => uploadProductImageFile(file, userId))
+  );
+  return uploadedUrls;
+}

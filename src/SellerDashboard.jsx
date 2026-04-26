@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { formatPriceKZA } from './utils/formatPrice';
-import { uploadProductImageFile } from './utils/uploadProductImage';
+import { uploadProductImageFiles } from './utils/uploadProductImage';
 
 export default function SellerDashboard({
   authUserId,
@@ -13,8 +13,8 @@ export default function SellerDashboard({
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [imagePreview, setImagePreview] = useState(null);
-  const [selectedImageFile, setSelectedImageFile] = useState(null);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [selectedImageFiles, setSelectedImageFiles] = useState([]);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nome: '',
@@ -25,29 +25,34 @@ export default function SellerDashboard({
 
   useEffect(() => {
     return () => {
-      if (imagePreview) URL.revokeObjectURL(imagePreview);
+      imagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
     };
-  }, [imagePreview]);
+  }, [imagePreviews]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleImageSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      alert('Selecione um ficheiro de imagem.');
-      e.target.value = '';
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    const hasInvalid = files.some((file) => !file.type.startsWith('image/'));
+    if (hasInvalid) {
+      alert('Todos os ficheiros selecionados devem ser imagens.');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
-    setSelectedImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+
+    imagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+    setSelectedImageFiles(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
   const clearImageSelection = () => {
-    setSelectedImageFile(null);
-    setImagePreview(null);
+    imagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+    setSelectedImageFiles([]);
+    setImagePreviews([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -58,18 +63,19 @@ export default function SellerDashboard({
       alert('Sessão inválida. Inicie sessão novamente.');
       return;
     }
-    if (!selectedImageFile) {
-      alert('Selecione uma imagem do produto.');
+    if (!selectedImageFiles.length) {
+      alert('Selecione pelo menos uma imagem do produto.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const imagem_url = await uploadProductImageFile(selectedImageFile, authUserId);
+      const imagens = await uploadProductImageFiles(selectedImageFiles, authUserId);
       await onCreateProduct({
         ...formData,
         preco: Number(formData.preco),
-        imagem_url,
+        imagem_url: imagens[0] || null,
+        imagens,
       });
       setSuccessMessage('Produto publicado com sucesso!');
       setFormData((prev) => ({
@@ -179,19 +185,29 @@ export default function SellerDashboard({
               </select>
               <input type="number" min="0" step="0.01" name="preco" value={formData.preco} onChange={handleChange} required placeholder="Preço" className="w-full px-4 py-2 border rounded-lg text-sm" />
               <div className="sm:col-span-2 space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Imagem do produto</label>
+                <label className="block text-sm font-medium text-gray-700">Imagens do produto</label>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageSelect}
                   className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700"
                 />
-                <p className="text-xs text-gray-500">JPEG, PNG, WebP ou GIF até 5 MB.</p>
-                {imagePreview && (
-                  <div className="relative inline-block">
+                <p className="text-xs text-gray-500">Selecione várias imagens (JPEG, PNG, WebP ou GIF até 5 MB cada).</p>
+                {imagePreviews.length > 0 && (
+                  <div className="space-y-2">
                     <p className="text-xs text-gray-600 mb-1">Pré-visualização</p>
-                    <img src={imagePreview} alt="Pré-visualização do produto" className="max-h-48 rounded-lg border border-gray-200 object-contain bg-gray-100" />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {imagePreviews.map((previewUrl, index) => (
+                        <img
+                          key={`${previewUrl}-${index}`}
+                          src={previewUrl}
+                          alt={`Pré-visualização ${index + 1}`}
+                          className="h-24 w-full rounded-lg border border-gray-200 object-cover bg-gray-100"
+                        />
+                      ))}
+                    </div>
                     <button
                       type="button"
                       onClick={clearImageSelection}

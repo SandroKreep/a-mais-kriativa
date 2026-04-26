@@ -179,7 +179,8 @@ function App() {
       price: Number(product.preco) || 0,
       originalPrice: Number(product.preco) || 0,
       category: mapCategoryToLabel(product.categoria),
-      image: product.imagem_url || 'https://via.placeholder.com/600x400?text=A%2B+Kriativa',
+      image: (Array.isArray(product.imagens) && product.imagens[0]) || product.imagem_url || 'https://via.placeholder.com/600x400?text=A%2B+Kriativa',
+      images: Array.isArray(product.imagens) && product.imagens.length ? product.imagens : [product.imagem_url].filter(Boolean),
       rating: 4.5,
       available: product.disponivel,
       rawCategory: product.categoria,
@@ -404,6 +405,7 @@ function App() {
       preco: payload.preco,
       categoria: payload.categoria,
       imagem_url: payload.imagem_url || null,
+      imagens: Array.isArray(payload.imagens) && payload.imagens.length ? payload.imagens : null,
       disponivel: true,
       vendedor_id: user.id,
     };

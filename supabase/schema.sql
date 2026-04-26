@@ -40,6 +40,7 @@ alter table public.produtos add column if not exists vendedor_id uuid references
 alter table public.produtos add column if not exists whatsapp text;
 alter table public.produtos add column if not exists email text;
 alter table public.produtos add column if not exists telefone text;
+alter table public.produtos add column if not exists imagens text[];
 
 -- =========================
 -- 3) pedidos
@@ -116,6 +117,31 @@ create policy "produtos_select_publico"
   for select
   to anon, authenticated
   using (true);
+
+-- Vendedor autenticado pode inserir os seus próprios produtos
+drop policy if exists "produtos_insert_autenticado_proprio" on public.produtos;
+create policy "produtos_insert_autenticado_proprio"
+  on public.produtos
+  for insert
+  to authenticated
+  with check (vendedor_id = auth.uid());
+
+-- Vendedor autenticado pode atualizar os seus próprios produtos
+drop policy if exists "produtos_update_autenticado_proprio" on public.produtos;
+create policy "produtos_update_autenticado_proprio"
+  on public.produtos
+  for update
+  to authenticated
+  using (vendedor_id = auth.uid())
+  with check (vendedor_id = auth.uid());
+
+-- Vendedor autenticado pode remover os seus próprios produtos
+drop policy if exists "produtos_delete_autenticado_proprio" on public.produtos;
+create policy "produtos_delete_autenticado_proprio"
+  on public.produtos
+  for delete
+  to authenticated
+  using (vendedor_id = auth.uid());
 
 -- Avaliações públicas para leitura
 drop policy if exists "avaliacoes_select_publico" on public.avaliacoes;

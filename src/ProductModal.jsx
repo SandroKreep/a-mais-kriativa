@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPriceKZA } from './utils/formatPrice';
 
@@ -14,6 +14,23 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
   const whatsappUrl = whatsappNumber
     ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
     : null;
+  const galleryImages = useMemo(() => {
+    const candidateList = Array.isArray(product.images) ? product.images : [];
+    const unique = [...new Set(candidateList.filter(Boolean))];
+    if (unique.length) return unique;
+    return [product.image].filter(Boolean);
+  }, [product.image, product.images]);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+
+  useEffect(() => {
+    setGalleryIndex(0);
+  }, [product.id, isOpen]);
+
+  const currentImage = galleryImages[galleryIndex] || product.image;
+  const canNavigateGallery = galleryImages.length > 1;
+  const goPrevImage = () =>
+    setGalleryIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  const goNextImage = () => setGalleryIndex((prev) => (prev + 1) % galleryImages.length);
 
   return (
     <AnimatePresence>
@@ -52,16 +69,55 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
               {/* Image */}
               <div className="relative h-48 sm:h-96 bg-gray-100 overflow-hidden">
                 <img
-                  src={product.image}
-                  alt={product.name}
+                  src={currentImage}
+                  alt={`${product.name} - imagem ${galleryIndex + 1}`}
                   className="w-full h-full object-cover"
                 />
+                {canNavigateGallery && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={goPrevImage}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-sm font-bold text-white hover:bg-black/70"
+                      aria-label="Imagem anterior"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={goNextImage}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 px-3 py-2 text-sm font-bold text-white hover:bg-black/70"
+                      aria-label="Próxima imagem"
+                    >
+                      ›
+                    </button>
+                  </>
+                )}
                 {discount > 0 && (
                   <div className="absolute top-4 sm:top-6 right-4 sm:right-6 bg-red-500 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full font-bold text-sm sm:text-lg">
                     -{discount}%
                   </div>
                 )}
               </div>
+              {canNavigateGallery && (
+                <div className="px-4 sm:px-8 pt-3">
+                  <div className="flex gap-2 overflow-x-auto">
+                    {galleryImages.map((img, index) => (
+                      <button
+                        key={`${img}-${index}`}
+                        type="button"
+                        onClick={() => setGalleryIndex(index)}
+                        className={`h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
+                          index === galleryIndex ? 'border-primary' : 'border-gray-200'
+                        }`}
+                        aria-label={`Ver imagem ${index + 1}`}
+                      >
+                        <img src={img} alt={`Miniatura ${index + 1}`} className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Content */}
               <div className="p-4 sm:p-8">
