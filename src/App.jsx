@@ -130,7 +130,8 @@ function matchesNavCategory(product, selectedCategory) {
 }
 
 function App() {
-  const isAdminRoute = window.location.pathname === '/admin';
+  const pathname = window.location.pathname || '/';
+  const isAdminRoute = pathname === '/admin' || pathname === '/admin/';
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [selectedProduct, setSelectedProduct] = useState(null);
