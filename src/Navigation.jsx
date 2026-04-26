@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
-export default function Navigation({ categories, selectedCategory, onCategoryChange, onLoginClick, user, userProfile, onLogoutClick, cartCount = 0, onSellerDashboardClick, onCartClick }) {
+export default function Navigation({ categories, selectedCategory, onCategoryChange, onLoginClick, user, userProfile, canAccessSellerDashboard = false, onLogoutClick, cartCount = 0, onSellerDashboardClick, onCartClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -70,7 +70,7 @@ export default function Navigation({ categories, selectedCategory, onCategoryCha
             </motion.button>
             {user ? (
               <>
-                {userProfile?.tipo_perfil === 'vendedor' && (
+                {canAccessSellerDashboard && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -163,7 +163,7 @@ export default function Navigation({ categories, selectedCategory, onCategoryCha
               >
                 Abrir Carrinho
               </motion.button>
-              {userProfile?.tipo_perfil === 'vendedor' && (
+              {canAccessSellerDashboard && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   onClick={() => {

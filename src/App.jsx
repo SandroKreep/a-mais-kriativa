@@ -149,6 +149,13 @@ function App() {
   /** Carregamento dos produtos Supabase em segundo plano (não bloqueia os estáticos). */
   const [isLoadingSupabaseProducts, setIsLoadingSupabaseProducts] = useState(true);
   const [supabaseProductsTimedOut, setSupabaseProductsTimedOut] = useState(false);
+  const canAccessSellerDashboard = Boolean(
+    user &&
+      (
+        userProfile?.tipo_perfil === 'vendedor' ||
+        userProfile?.tipo_perfil == null
+      )
+  );
 
   const mapCategoryToLabel = useCallback((category) => {
     const key = String(category || '').toLowerCase();
@@ -181,7 +188,7 @@ function App() {
       email: vendedor?.email || '',
       telefone: vendedor?.telefone || '',
       localizacao: vendedor?.localizacao || '',
-      vendedorId: product.usuario_id || null,
+      vendedorId: product.vendedor_id || null,
       isStatic: false,
       };
     },
@@ -193,7 +200,7 @@ function App() {
       const rawRows = rows ?? [];
       if (!rawRows.length) return [];
 
-      const userIds = [...new Set(rawRows.map((row) => row.usuario_id).filter(Boolean))];
+      const userIds = [...new Set(rawRows.map((row) => row.vendedor_id).filter(Boolean))];
       if (!userIds.length) {
         return rawRows.map(mapSupabaseRowToProduct);
       }
@@ -211,7 +218,7 @@ function App() {
       const sellerById = Object.fromEntries((sellers ?? []).map((seller) => [seller.id, seller]));
       const hydratedRows = rawRows.map((row) => ({
         ...row,
-        vendedor: sellerById[row.usuario_id] ?? null,
+        vendedor: sellerById[row.vendedor_id] ?? null,
       }));
 
       return hydratedRows.map(mapSupabaseRowToProduct);
@@ -398,7 +405,7 @@ function App() {
       categoria: payload.categoria,
       imagem_url: payload.imagem_url || null,
       disponivel: true,
-      usuario_id: user.id,
+      vendedor_id: user.id,
     };
 
     const insertResult = await supabase
@@ -446,7 +453,7 @@ function App() {
       .from('produtos')
       .delete()
       .eq('id', product.sourceId)
-      .eq('usuario_id', user.id)
+      .eq('vendedor_id', user.id)
       .select('id')
       .maybeSingle();
 
@@ -595,6 +602,7 @@ function App() {
         onLoginClick={() => setIsAuthOpen(true)}
         user={user}
         userProfile={userProfile}
+        canAccessSellerDashboard={canAccessSellerDashboard}
         onLogoutClick={handleLogout}
         cartCount={cartItems.length}
         onCartClick={() => setIsCartDrawerOpen(true)}
@@ -887,7 +895,7 @@ function App() {
         )}
       </AnimatePresence>
 
-      {isSellerDashboardOpen && userProfile?.tipo_perfil === 'vendedor' && (
+      {isSellerDashboardOpen && canAccessSellerDashboard && (
         <SellerDashboard
           authUserId={user?.id}
           userProfile={userProfile}
