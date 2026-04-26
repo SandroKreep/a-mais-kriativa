@@ -747,7 +747,7 @@ function App() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-8">
             <div>
               <h3 className="font-bold text-white mb-4">Sobre</h3>
-              <p className="text-xs sm:text-sm">A+ Kriativa Marketplace - Seu comparador de preços inteligente para tecnologia.</p>
+              <p className="text-xs sm:text-sm">A+ Kriativa Marketplace - O seu marketplace online em Angola.</p>
             </div>
             <div>
               <h3 className="font-bold text-white mb-4">Links Rápidos</h3>
