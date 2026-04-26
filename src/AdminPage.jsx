@@ -25,6 +25,28 @@ export default function AdminPage() {
   const [topProducts, setTopProducts] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
 
+  const fetchSellerProductsWithFallback = useCallback(async () => {
+    const candidateColumns = ['usuario_id', 'vendedor_id', 'user_id', 'seller_id', 'criador_id'];
+    let lastError = null;
+
+    for (const sellerColumn of candidateColumns) {
+      const result = await supabase
+        .from('produtos')
+        .select(`id, nome, ${sellerColumn}`)
+        .limit(5000);
+
+      if (!result.error) {
+        return {
+          rows: result.data || [],
+          sellerColumn,
+        };
+      }
+      lastError = result.error;
+    }
+
+    throw lastError || new Error('Não foi possível identificar a coluna de vendedor em produtos.');
+  }, []);
+
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError('');
@@ -35,11 +57,10 @@ export default function AdminPage() {
         ordersRes,
         accessesRes,
         viewsRes,
-        sellerProductsRes,
       ] = await Promise.all([
         supabase
           .from('produtos')
-          .select('id, nome, categoria, preco, disponivel, criado_em, usuario_id, vendedor_id')
+          .select('id, nome, categoria, preco, disponivel, criado_em')
           .order('criado_em', { ascending: false }),
         supabase
           .from('usuarios')
@@ -59,10 +80,6 @@ export default function AdminPage() {
           .select('id, produto_id, criado_em, produtos(nome)')
           .order('criado_em', { ascending: false })
           .limit(5000),
-        supabase
-          .from('produtos')
-          .select('id, nome, usuario_id, vendedor_id, usuarios(nome, email)')
-          .limit(5000),
       ]);
 
       if (productsRes.error) throw productsRes.error;
@@ -70,8 +87,6 @@ export default function AdminPage() {
       if (ordersRes.error) throw ordersRes.error;
       if (accessesRes.error) throw accessesRes.error;
       if (viewsRes.error) throw viewsRes.error;
-      if (sellerProductsRes.error) throw sellerProductsRes.error;
-
       setProducts(productsRes.data || []);
       setUsers(usersRes.data || []);
       setOrders(ordersRes.data || []);
@@ -114,14 +129,26 @@ export default function AdminPage() {
           .slice(0, 5)
       );
 
+      const sellerProducts = await fetchSellerProductsWithFallback();
+      const sellerIds = [
+        ...new Set(
+          (sellerProducts.rows || []).map((product) => product[sellerProducts.sellerColumn]).filter(Boolean)
+        ),
+      ];
+      const { data: sellerUsers, error: sellerUsersError } = sellerIds.length
+        ? await supabase.from('usuarios').select('id, nome, email').in('id', sellerIds)
+        : { data: [], error: null };
+      if (sellerUsersError) throw sellerUsersError;
+      const sellerById = Object.fromEntries((sellerUsers || []).map((seller) => [seller.id, seller]));
+
       const sellersMap = {};
-      for (const product of sellerProductsRes.data || []) {
-        const sellerId = product.usuario_id || product.vendedor_id;
+      for (const product of sellerProducts.rows || []) {
+        const sellerId = product[sellerProducts.sellerColumn];
         if (!sellerId) continue;
         if (!sellersMap[sellerId]) {
           sellersMap[sellerId] = {
             sellerId,
-            sellerName: product.usuarios?.nome || product.usuarios?.email || 'Vendedor',
+            sellerName: sellerById[sellerId]?.nome || sellerById[sellerId]?.email || 'Vendedor',
             productsCount: 0,
           };
         }
@@ -137,7 +164,7 @@ export default function AdminPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [fetchSellerProductsWithFallback]);
 
   useEffect(() => {
     if (isLogged) {
