@@ -37,11 +37,14 @@ function mapServiceToNavCategory(service) {
 }
 
 function buildStaticProductsFromMock(data) {
+  const removedStaticProductIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
   const out = [];
 
   (data.products ?? []).forEach((p) => {
+    const productId = `static-product-${p.id}`;
+    if (removedStaticProductIds.includes(productId)) return;
     out.push({
-      id: `static-product-${p.id}`,
+      id: productId,
       sourceId: p.id,
       sourceType: 'product',
       name: p.name,
@@ -64,9 +67,11 @@ function buildStaticProductsFromMock(data) {
   });
 
   (data.customProducts ?? []).forEach((p) => {
+    const customId = `static-custom-${p.id}`;
+    if (removedStaticProductIds.includes(customId)) return;
     const price = Number(p.basePrice) || 0;
     out.push({
-      id: `static-custom-${p.id}`,
+      id: customId,
       sourceId: p.id,
       sourceType: 'custom',
       name: p.name,
@@ -89,10 +94,12 @@ function buildStaticProductsFromMock(data) {
   });
 
   (data.services ?? []).forEach((p) => {
+    const serviceId = `static-service-${p.id}`;
+    if (removedStaticProductIds.includes(serviceId)) return;
     const nav = mapServiceToNavCategory(p);
     const price = Number(p.price) || 0;
     out.push({
-      id: `static-service-${p.id}`,
+      id: serviceId,
       sourceId: p.id,
       sourceType: 'service',
       name: p.name,
@@ -177,7 +184,7 @@ function App() {
       name: product.nome,
       description: product.descricao ?? '',
       price: Number(product.preco) || 0,
-      originalPrice: Number(product.preco) || 0,
+      originalPrice: Number(product.preco_original) || Number(product.preco) || 0,
       category: mapCategoryToLabel(product.categoria),
       image: (Array.isArray(product.imagens) && product.imagens[0]) || product.imagem_url || 'https://via.placeholder.com/600x400?text=A%2B+Kriativa',
       images: Array.isArray(product.imagens) && product.imagens.length ? product.imagens : [product.imagem_url].filter(Boolean),
@@ -403,6 +410,7 @@ function App() {
       nome: payload.nome,
       descricao: payload.descricao,
       preco: payload.preco,
+      preco_original: payload.preco_original || payload.originalPrice || payload.preco,
       categoria: payload.categoria,
       imagem_url: payload.imagem_url || null,
       imagens: Array.isArray(payload.imagens) && payload.imagens.length ? payload.imagens : null,
@@ -671,7 +679,7 @@ function App() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {filteredStatic.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
@@ -685,12 +693,12 @@ function App() {
                   key={`skeleton-${idx}`}
                   className="bg-white rounded-2xl overflow-hidden h-full border border-gray-100 shadow-sm"
                 >
-                  <div className="h-40 sm:h-48 skeleton-card-shimmer" />
-                  <div className="p-4 sm:p-5 space-y-3">
-                    <div className="h-4 bg-slate-200/90 rounded w-2/3 animate-pulse" />
-                    <div className="h-3 bg-slate-200/90 rounded w-full animate-pulse" />
-                    <div className="h-3 bg-slate-200/90 rounded w-5/6 animate-pulse" />
-                    <div className="h-8 bg-slate-200/90 rounded w-full mt-4 animate-pulse" />
+                  <div className="h-32 sm:h-40 lg:h-48 skeleton-card-shimmer" />
+                  <div className="p-2 sm:p-4 lg:p-5 space-y-2 sm:space-y-3">
+                    <div className="h-3 bg-slate-200/90 rounded w-2/3 animate-pulse" />
+                    <div className="h-2 bg-slate-200/90 rounded w-full animate-pulse" />
+                    <div className="h-2 bg-slate-200/90 rounded w-5/6 animate-pulse" />
+                    <div className="h-6 sm:h-8 bg-slate-200/90 rounded w-full mt-2 sm:mt-4 animate-pulse" />
                   </div>
                 </div>
               ))}

@@ -16,7 +16,7 @@ export default function ProductCard({ product, onOpen }) {
       className="bg-white rounded-2xl shadow-soft overflow-hidden cursor-pointer group h-full flex flex-col hover:shadow-soft-lg transition-shadow"
     >
       {/* Image Container */}
-      <div className="relative overflow-hidden h-40 sm:h-48 bg-gray-100">
+      <div className="relative overflow-hidden h-32 sm:h-40 lg:h-48 bg-gray-100">
         <motion.img
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.4 }}
@@ -30,28 +30,28 @@ export default function ProductCard({ product, onOpen }) {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute top-2 sm:top-4 right-2 sm:right-4 bg-red-500 text-white px-2 sm:px-3 py-1 rounded-full font-bold text-xs sm:text-sm"
+            className="absolute top-1 sm:top-2 lg:top-4 right-1 sm:right-2 lg:right-4 bg-red-500 text-white px-1.5 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-full font-bold text-xs"
           >
             -{discount}%
           </motion.div>
         )}
 
         {/* Category Badge */}
-        <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-white bg-opacity-90 text-gray-700 px-2 sm:px-3 py-1 rounded-full font-medium text-xs">
+        <div className="absolute top-1 sm:top-2 lg:top-4 left-1 sm:left-2 lg:left-4 bg-white bg-opacity-90 text-gray-700 px-1.5 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-full font-medium text-xs">
           {product.category}
         </div>
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-5 flex flex-col flex-grow">
+      <div className="p-2 sm:p-4 lg:p-5 flex flex-col flex-grow">
         {/* Rating */}
-        <div className="flex items-center gap-1 mb-2 sm:mb-3">
+        <div className="flex items-center gap-1 mb-1 sm:mb-2 lg:mb-3">
           <span className="text-xs text-gray-500 font-medium">Avaliação</span>
           <div className="flex">
             {[...Array(5)].map((_, i) => (
               <motion.svg
                 key={i}
-                className={`w-3 h-3 sm:w-4 sm:h-4 ${
+                className={`w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 ${
                   i < Math.round(product.rating)
                     ? 'text-yellow-400'
                     : 'text-gray-300'
@@ -64,24 +64,24 @@ export default function ProductCard({ product, onOpen }) {
               </motion.svg>
             ))}
           </div>
-          <span className="text-xs text-gray-600 ml-1 sm:ml-2">({product.rating})</span>
+          <span className="text-xs text-gray-600 ml-0.5 sm:ml-1 lg:ml-2">({product.rating})</span>
         </div>
 
         {/* Product Name */}
-        <h3 className="font-bold text-gray-900 text-sm sm:text-lg mb-2 sm:mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-gray-900 text-xs sm:text-sm lg:text-lg mb-1 sm:mb-2 lg:mb-3 line-clamp-2 group-hover:text-primary transition-colors">
           {product.name}
         </h3>
 
         {/* Description */}
-        <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-2 flex-grow">
+        <p className="text-xs text-gray-600 mb-2 sm:mb-3 lg:mb-4 line-clamp-2 flex-grow">
           {product.description}
         </p>
 
         {/* Pricing */}
-        <div className="flex items-end gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <span className="text-lg sm:text-2xl font-bold text-primary">{formatPriceKZA(price)}</span>
+        <div className="flex items-end gap-1 sm:gap-2 lg:gap-3 mb-2 sm:mb-3 lg:mb-4">
+          <span className="text-base sm:text-lg lg:text-2xl font-bold text-primary">{formatPriceKZA(price)}</span>
           {original > price && (
-            <span className="text-xs sm:text-sm text-gray-500 line-through">{formatPriceKZA(original)}</span>
+            <span className="text-xs text-gray-500 line-through">{formatPriceKZA(original)}</span>
           )}
         </div>
 
@@ -89,7 +89,7 @@ export default function ProductCard({ product, onOpen }) {
         <motion.button
           whileHover={{ backgroundColor: '#0052CC' }}
           whileTap={{ scale: 0.98 }}
-          className="w-full bg-primary text-white py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-base transition-all"
+          className="w-full bg-primary text-white py-1.5 sm:py-2 lg:py-3 rounded-xl font-semibold text-xs sm:text-sm lg:text-base transition-all"
         >
           Ver Detalhes
         </motion.button>

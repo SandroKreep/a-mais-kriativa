@@ -20,6 +20,7 @@ export default function SellerDashboard({
     nome: '',
     descricao: '',
     preco: '',
+    preco_original: '',
     categoria: 'produtos',
   });
 
@@ -74,6 +75,7 @@ export default function SellerDashboard({
       await onCreateProduct({
         ...formData,
         preco: Number(formData.preco),
+        preco_original: formData.preco_original ? Number(formData.preco_original) : Number(formData.preco),
         imagem_url: imagens[0] || null,
         imagens,
       });
@@ -83,6 +85,7 @@ export default function SellerDashboard({
         nome: '',
         descricao: '',
         preco: '',
+        preco_original: '',
         categoria: 'produtos',
       }));
       clearImageSelection();
@@ -184,40 +187,41 @@ export default function SellerDashboard({
                 <option value="servicos">Serviços</option>
               </select>
               <input type="number" min="0" step="0.01" name="preco" value={formData.preco} onChange={handleChange} required placeholder="Preço" className="w-full px-4 py-2 border rounded-lg text-sm" />
-              <div className="sm:col-span-2 space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Imagens do produto</label>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageSelect}
-                  className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700"
-                />
-                <p className="text-xs text-gray-500">Selecione várias imagens (JPEG, PNG, WebP ou GIF até 5 MB cada).</p>
-                {imagePreviews.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-600 mb-1">Pré-visualização</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {imagePreviews.map((previewUrl, index) => (
-                        <img
-                          key={`${previewUrl}-${index}`}
-                          src={previewUrl}
-                          alt={`Pré-visualização ${index + 1}`}
-                          className="h-24 w-full rounded-lg border border-gray-200 object-cover bg-gray-100"
-                        />
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={clearImageSelection}
-                      className="mt-2 text-xs text-red-600 underline hover:text-red-800"
-                    >
-                      Remover imagem
-                    </button>
+              <input type="number" min="0" step="0.01" name="preco_original" value={formData.preco_original} onChange={handleChange} placeholder="Preço Original (Opcional)" className="w-full px-4 py-2 border rounded-lg text-sm" />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Imagens do produto</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageSelect}
+                className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700"
+              />
+              <p className="text-xs text-gray-500">Selecione várias imagens (JPEG, PNG, WebP ou GIF até 5 MB cada).</p>
+              {imagePreviews.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-600 mb-1">Pré-visualização</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {imagePreviews.map((previewUrl, index) => (
+                      <img
+                        key={`${previewUrl}-${index}`}
+                        src={previewUrl}
+                        alt={`Pré-visualização ${index + 1}`}
+                        className="h-24 w-full rounded-lg border border-gray-200 object-cover bg-gray-100"
+                      />
+                    ))}
                   </div>
-                )}
-              </div>
+                  <button
+                    type="button"
+                    onClick={clearImageSelection}
+                    className="mt-2 text-xs text-red-600 underline hover:text-red-800"
+                  >
+                    Remover imagem
+                  </button>
+                </div>
+              )}
             </div>
             <textarea name="descricao" value={formData.descricao} onChange={handleChange} rows="3" required placeholder="Descrição do produto" className="w-full px-4 py-2 border rounded-lg text-sm" />
             <button type="submit" disabled={isSubmitting} className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-all disabled:opacity-60">

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from './supabase';
 import { formatPriceKZA } from './utils/formatPrice';
 import { isAdminLoggedIn, loginAdmin, logoutAdmin, getAdminUsername } from './adminAuth';
+import productsData from './mockData.json';
 
 const SECTIONS = [
   { id: 'produtos', label: 'Gestão de Produtos' },
@@ -19,11 +20,71 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [products, setProducts] = useState([]);
+  const [staticProducts, setStaticProducts] = useState([]);
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [accessStats, setAccessStats] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
+
+  const buildStaticProductsList = useCallback(() => {
+    const removedStaticProductIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
+    const staticList = [];
+
+    (productsData.products ?? []).forEach((p) => {
+      const id = `static-product-${p.id}`;
+      if (removedStaticProductIds.includes(id)) return;
+      staticList.push({
+        id,
+        nome: p.name,
+        categoria: p.category ?? 'Produtos',
+        preco: Number(p.price) || 0,
+        disponivel: true,
+        tipo: 'Produto',
+      });
+    });
+
+    (productsData.customProducts ?? []).forEach((p) => {
+      const id = `static-custom-${p.id}`;
+      if (removedStaticProductIds.includes(id)) return;
+      staticList.push({
+        id,
+        nome: p.name,
+        categoria: 'Personalização',
+        preco: Number(p.basePrice) || 0,
+        disponivel: true,
+        tipo: 'Personalização',
+      });
+    });
+
+    (productsData.services ?? []).forEach((p) => {
+      const id = `static-service-${p.id}`;
+      if (removedStaticProductIds.includes(id)) return;
+      staticList.push({
+        id,
+        nome: p.name,
+        categoria: 'Serviços',
+        preco: Number(p.price) || 0,
+        disponivel: true,
+        tipo: 'Serviço',
+      });
+    });
+
+    return staticList;
+  }, []);
+
+  const removeStaticProduct = (productId) => {
+    const confirmed = window.confirm('Remover este item de demonstração permanentemente?');
+    if (!confirmed) return;
+
+    const removedIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
+    if (!removedIds.includes(productId)) {
+      removedIds.push(productId);
+      localStorage.setItem('removedStaticProductIds', JSON.stringify(removedIds));
+    }
+
+    setStaticProducts((prev) => prev.filter((item) => item.id !== productId));
+  };
 
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
@@ -152,8 +213,9 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLogged) {
       loadDashboardData();
+      setStaticProducts(buildStaticProductsList());
     }
-  }, [isLogged, loadDashboardData]);
+  }, [isLogged, loadDashboardData, buildStaticProductsList]);
 
   const usersTotal = users.length;
 
@@ -217,48 +279,92 @@ export default function AdminPage() {
   const content = useMemo(() => {
     if (activeSection === 'produtos') {
       return (
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-900">Produtos ({products.length})</h2>
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full bg-white text-sm">
-              <thead className="bg-slate-50 text-slate-700">
-                <tr>
-                  <th className="px-4 py-3 text-left">Nome</th>
-                  <th className="px-4 py-3 text-left">Categoria</th>
-                  <th className="px-4 py-3 text-left">Preço</th>
-                  <th className="px-4 py-3 text-left">Status</th>
-                  <th className="px-4 py-3 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product.id} className="border-t border-slate-100">
-                    <td className="px-4 py-3 font-medium">{product.nome}</td>
-                    <td className="px-4 py-3 text-slate-600">{product.categoria}</td>
-                    <td className="px-4 py-3 text-slate-600">{formatPriceKZA(product.preco)}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                          product.disponivel
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-slate-200 text-slate-700'
-                        }`}
-                      >
-                        {product.disponivel ? 'Disponível' : 'Indisponível'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => removeProduct(product.id)}
-                        className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
-                      >
-                        Remover
-                      </button>
-                    </td>
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold text-slate-900">Produtos Publicados ({products.length})</h2>
+            <div className="overflow-x-auto rounded-xl border border-slate-200">
+              <table className="min-w-full bg-white text-sm">
+                <thead className="bg-slate-50 text-slate-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Nome</th>
+                    <th className="px-4 py-3 text-left">Categoria</th>
+                    <th className="px-4 py-3 text-left">Preço</th>
+                    <th className="px-4 py-3 text-left">Status</th>
+                    <th className="px-4 py-3 text-right">Ações</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {products.map((product) => (
+                    <tr key={product.id} className="border-t border-slate-100">
+                      <td className="px-4 py-3 font-medium">{product.nome}</td>
+                      <td className="px-4 py-3 text-slate-600">{product.categoria}</td>
+                      <td className="px-4 py-3 text-slate-600">{formatPriceKZA(product.preco)}</td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                            product.disponivel
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : 'bg-slate-200 text-slate-700'
+                          }`}
+                        >
+                          {product.disponivel ? 'Disponível' : 'Indisponível'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => removeProduct(product.id)}
+                          className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                        >
+                          Remover
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="space-y-4 border-t border-slate-200 pt-6">
+            <h2 className="text-xl font-bold text-slate-900">Itens de Demonstração ({staticProducts.length})</h2>
+            <p className="text-sm text-slate-600">Estes são itens padrão do catálogo. Pode removê-los se necessário.</p>
+            {staticProducts.length > 0 ? (
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="min-w-full bg-white text-sm">
+                  <thead className="bg-slate-50 text-slate-700">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Nome</th>
+                      <th className="px-4 py-3 text-left">Tipo</th>
+                      <th className="px-4 py-3 text-left">Preço</th>
+                      <th className="px-4 py-3 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staticProducts.map((product) => (
+                      <tr key={product.id} className="border-t border-slate-100">
+                        <td className="px-4 py-3 font-medium">{product.nome}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          <span className="rounded-full bg-blue-100 text-blue-700 px-2 py-1 text-xs font-semibold">
+                            {product.tipo}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-600">{formatPriceKZA(product.preco)}</td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => removeStaticProduct(product.id)}
+                            className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                          >
+                            Remover
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">Nenhum item de demonstração disponível.</p>
+            )}
           </div>
         </div>
       );
@@ -399,7 +505,7 @@ export default function AdminPage() {
         </div>
       </div>
     );
-  }, [activeSection, accessStats, orders, products, topProducts, topSellers, users, usersTotal]);
+  }, [activeSection, accessStats, orders, products, staticProducts, topProducts, topSellers, users, usersTotal]);
 
   if (!isLogged) {
     return (
