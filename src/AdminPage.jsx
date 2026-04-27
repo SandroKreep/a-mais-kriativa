@@ -73,17 +73,46 @@ export default function AdminPage() {
     return staticList;
   }, []);
 
-  const removeStaticProduct = (productId) => {
+  const removeStaticProduct = async (productId) => {
     const confirmed = window.confirm('Remover este item de demonstração permanentemente?');
     if (!confirmed) return;
 
-    const removedIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
-    if (!removedIds.includes(productId)) {
-      removedIds.push(productId);
-      localStorage.setItem('removedStaticProductIds', JSON.stringify(removedIds));
-    }
+    try {
+      // Extrair tipo e ID do productId (formato: "static-product-1", "static-custom-2", etc)
+      const parts = productId.split('-');
+      const sourceType = parts[1]; // 'product', 'custom', 'service'
+      const sourceId = parts[2]; // número do ID
+      
+      const mapTypeToDb = {
+        'product': 'product',
+        'custom': 'custom',
+        'service': 'service',
+      };
 
-    setStaticProducts((prev) => prev.filter((item) => item.id !== productId));
+      // Guardar no Supabase
+      const { error } = await supabase.from('produtos_removidos').insert({
+        produto_id: productId,
+        tipo: mapTypeToDb[sourceType] || 'product',
+      });
+
+      if (error) {
+        console.error('Erro ao guardar no Supabase:', error);
+        alert('Erro ao remover: ' + error.message);
+        return;
+      }
+
+      // Guardar também no localStorage como fallback
+      const removedIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
+      if (!removedIds.includes(productId)) {
+        removedIds.push(productId);
+        localStorage.setItem('removedStaticProductIds', JSON.stringify(removedIds));
+      }
+
+      setStaticProducts((prev) => prev.filter((item) => item.id !== productId));
+    } catch (err) {
+      console.error('Erro ao remover produto:', err);
+      alert('Erro ao remover produto: ' + err.message);
+    }
   };
 
   const loadDashboardData = useCallback(async () => {
