@@ -16,6 +16,12 @@ create table if not exists public.usuarios (
   criado_em timestamptz not null default now()
 );
 
+alter table public.usuarios add column if not exists whatsapp text;
+alter table public.usuarios add column if not exists localizacao text;
+alter table public.usuarios add column if not exists descricao_loja text;
+alter table public.usuarios add column if not exists website text;
+alter table public.usuarios add column if not exists tipo_perfil text;
+
 -- =========================
 -- 2) produtos
 -- =========================
@@ -29,7 +35,6 @@ create table if not exists public.produtos (
   localizacao text,
   vendedor_id uuid references public.usuarios(id) on delete set null,
   whatsapp text,
-  email text,
   telefone text,
   disponivel boolean not null default true,
   criado_em timestamptz not null default now()
@@ -38,9 +43,11 @@ create table if not exists public.produtos (
 alter table public.produtos add column if not exists localizacao text;
 alter table public.produtos add column if not exists vendedor_id uuid references public.usuarios(id) on delete set null;
 alter table public.produtos add column if not exists whatsapp text;
-alter table public.produtos add column if not exists email text;
+
 alter table public.produtos add column if not exists telefone text;
 alter table public.produtos add column if not exists imagens text[];
+alter table public.produtos add column if not exists preco_original numeric(12, 2);
+alter table public.produtos add column if not exists email text;
 
 -- =========================
 -- 3) pedidos
@@ -181,7 +188,8 @@ create policy "usuarios_update_proprio"
   on public.usuarios
   for update
   to authenticated
-  using (auth.uid() = id);
+  using (auth.uid() = id)
+  with check (auth.uid() = id);
 
 -- =========================
 -- 7) admin + estatísticas

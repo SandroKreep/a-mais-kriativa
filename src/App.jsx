@@ -422,11 +422,39 @@ function App() {
       vendedor_id: user.id,
     };
 
-    const insertResult = await supabase
-      .from('produtos')
-      .insert(insertPayload)
-      .select('*')
-      .maybeSingle();
+    const optionalInsertColumns = new Set([
+      'preco_original',
+      'imagens',
+      'whatsapp',
+      'email',
+      'telefone',
+      'localizacao',
+    ]);
+
+    const getMissingProdutosColumn = (err) => {
+      const msg = String(err?.message || '');
+      const m = msg.match(/Could not find '([^']+)' column of 'produtos'/i);
+      return m?.[1] || null;
+    };
+
+    let safeInsertPayload = { ...insertPayload };
+    let insertResult = null;
+
+    for (let i = 0; i <= optionalInsertColumns.size; i += 1) {
+      insertResult = await supabase
+        .from('produtos')
+        .insert(safeInsertPayload)
+        .select('*')
+        .maybeSingle();
+
+      const missingColumn = getMissingProdutosColumn(insertResult?.error);
+      if (!missingColumn) break;
+      if (!optionalInsertColumns.has(missingColumn) || !(missingColumn in safeInsertPayload)) break;
+
+      // Fallback para projetos com schema legado ainda sem algumas colunas opcionais.
+      const { [missingColumn]: _removed, ...rest } = safeInsertPayload;
+      safeInsertPayload = rest;
+    }
 
     console.log('Resultado do insert em produtos:', insertResult);
 
