@@ -36,13 +36,13 @@ function mapServiceToNavCategory(service) {
   return NAV.SERVICOS;
 }
 
-function buildStaticProductsFromMock(data) {
-  const removedStaticProductIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
+function buildStaticProductsFromMock(data, removedProductIds = []) {
+  const removed = removedProductIds instanceof Set ? removedProductIds : new Set(removedProductIds);
   const out = [];
 
   (data.products ?? []).forEach((p) => {
     const productId = `static-product-${p.id}`;
-    if (removedStaticProductIds.includes(productId)) return;
+    if (removed.has(productId)) return;
     out.push({
       id: productId,
       sourceId: p.id,
@@ -68,7 +68,7 @@ function buildStaticProductsFromMock(data) {
 
   (data.customProducts ?? []).forEach((p) => {
     const customId = `static-custom-${p.id}`;
-    if (removedStaticProductIds.includes(customId)) return;
+    if (removed.has(customId)) return;
     const price = Number(p.basePrice) || 0;
     out.push({
       id: customId,
@@ -95,7 +95,7 @@ function buildStaticProductsFromMock(data) {
 
   (data.services ?? []).forEach((p) => {
     const serviceId = `static-service-${p.id}`;
-    if (removedStaticProductIds.includes(serviceId)) return;
+    if (removed.has(serviceId)) return;
     const nav = mapServiceToNavCategory(p);
     const price = Number(p.price) || 0;
     out.push({
@@ -151,7 +151,28 @@ function App() {
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [supabaseProducts, setSupabaseProducts] = useState([]);
-  const staticProducts = useMemo(() => buildStaticProductsFromMock(productsData), []);
+  const [staticRemovedProductIds, setStaticRemovedProductIds] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.from('produtos_removidos').select('produto_id');
+      if (cancelled) return;
+      if (error) {
+        console.error('Erro ao carregar produtos estáticos removidos:', error);
+        return;
+      }
+      setStaticRemovedProductIds((data ?? []).map((row) => row.produto_id).filter(Boolean));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const staticProducts = useMemo(
+    () => buildStaticProductsFromMock(productsData, staticRemovedProductIds),
+    [staticRemovedProductIds]
+  );
   const [cartItems, setCartItems] = useState([]);
   /** Carregamento dos produtos Supabase em segundo plano (não bloqueia os estáticos). */
   const [isLoadingSupabaseProducts, setIsLoadingSupabaseProducts] = useState(true);

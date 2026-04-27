@@ -27,13 +27,14 @@ export default function AdminPage() {
   const [topProducts, setTopProducts] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
 
-  const buildStaticProductsList = useCallback(() => {
-    const removedStaticProductIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
+  const buildStaticProductsList = useCallback((removedProductIds = []) => {
+    const removed =
+      removedProductIds instanceof Set ? removedProductIds : new Set(removedProductIds);
     const staticList = [];
 
     (productsData.products ?? []).forEach((p) => {
       const id = `static-product-${p.id}`;
-      if (removedStaticProductIds.includes(id)) return;
+      if (removed.has(id)) return;
       staticList.push({
         id,
         nome: p.name,
@@ -46,7 +47,7 @@ export default function AdminPage() {
 
     (productsData.customProducts ?? []).forEach((p) => {
       const id = `static-custom-${p.id}`;
-      if (removedStaticProductIds.includes(id)) return;
+      if (removed.has(id)) return;
       staticList.push({
         id,
         nome: p.name,
@@ -59,7 +60,7 @@ export default function AdminPage() {
 
     (productsData.services ?? []).forEach((p) => {
       const id = `static-service-${p.id}`;
-      if (removedStaticProductIds.includes(id)) return;
+      if (removed.has(id)) return;
       staticList.push({
         id,
         nome: p.name,
@@ -95,17 +96,10 @@ export default function AdminPage() {
         tipo: mapTypeToDb[sourceType] || 'product',
       });
 
-      if (error) {
+      if (error && error.code !== '23505') {
         console.error('Erro ao guardar no Supabase:', error);
         alert('Erro ao remover: ' + error.message);
         return;
-      }
-
-      // Guardar também no localStorage como fallback
-      const removedIds = JSON.parse(localStorage.getItem('removedStaticProductIds') || '[]');
-      if (!removedIds.includes(productId)) {
-        removedIds.push(productId);
-        localStorage.setItem('removedStaticProductIds', JSON.stringify(removedIds));
       }
 
       setStaticProducts((prev) => prev.filter((item) => item.id !== productId));
@@ -126,6 +120,7 @@ export default function AdminPage() {
         accessesRes,
         viewsRes,
         sellerProductsRes,
+        removedStaticRes,
       ] = await Promise.all([
         supabase
           .from('produtos')
@@ -153,6 +148,7 @@ export default function AdminPage() {
           .from('produtos')
           .select('id, nome, vendedor_id')
           .limit(5000),
+        supabase.from('produtos_removidos').select('produto_id'),
       ]);
 
       if (productsRes.error) throw productsRes.error;
@@ -161,6 +157,7 @@ export default function AdminPage() {
       if (accessesRes.error) throw accessesRes.error;
       if (viewsRes.error) throw viewsRes.error;
       if (sellerProductsRes.error) throw sellerProductsRes.error;
+      if (removedStaticRes.error) throw removedStaticRes.error;
       setProducts(productsRes.data || []);
       setUsers(usersRes.data || []);
       setOrders(ordersRes.data || []);
@@ -232,19 +229,21 @@ export default function AdminPage() {
           .sort((a, b) => b.productsCount - a.productsCount)
           .slice(0, 5)
       );
+
+      const removedIds = (removedStaticRes.data ?? []).map((row) => row.produto_id).filter(Boolean);
+      setStaticProducts(buildStaticProductsList(removedIds));
     } catch (err) {
       setError(err.message || 'Erro ao carregar painel de administração.');
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [buildStaticProductsList]);
 
   useEffect(() => {
     if (isLogged) {
       loadDashboardData();
-      setStaticProducts(buildStaticProductsList());
     }
-  }, [isLogged, loadDashboardData, buildStaticProductsList]);
+  }, [isLogged, loadDashboardData]);
 
   const usersTotal = users.length;
 
