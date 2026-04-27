@@ -12,7 +12,6 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
     description: initialData?.description || '',
     image: initialData?.image || '',
     phone: initialData?.phone || user?.phone || '',
-    email: initialData?.email || user?.email || '',
   });
 
   const categories = ['Produtos', 'Websites', 'Personalização', 'Serviços'];
@@ -49,7 +48,6 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
       rating: 4.5,
       seller: initialData?.seller || user?.company || user?.name,
       phone: formData.phone,
-      email: formData.email,
       currency: 'KZA',
     };
 
@@ -73,7 +71,6 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
       description: '',
       image: '',
       phone: user?.phone || '',
-      email: user?.email || '',
     });
   };
 
@@ -200,21 +197,7 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
                   />
                 </div>
 
-                {/* Email */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                    Email de contacto
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors text-sm"
-                    placeholder="seu@email.com"
-                  />
-                </div>
+
               </div>
 
               {/* Description */}
