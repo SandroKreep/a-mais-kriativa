@@ -426,6 +426,17 @@ function App() {
     if (!user) {
       throw new Error('Utilizador não autenticado.');
     }
+    const {
+      data: { user: authUser },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError) {
+      throw authError;
+    }
+    const authenticatedUserId = authUser?.id || user?.id;
+    if (!authenticatedUserId) {
+      throw new Error('Sessão inválida. Inicie sessão novamente.');
+    }
 
     const insertPayload = {
       nome: payload.nome,
@@ -440,7 +451,7 @@ function App() {
       telefone: userProfile?.telefone || null,
       localizacao: userProfile?.localizacao || null,
       disponivel: true,
-      vendedor_id: user.id,
+      vendedor_id: authenticatedUserId,
     };
 
     const optionalInsertColumns = new Set([
