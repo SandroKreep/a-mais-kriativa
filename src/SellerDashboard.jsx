@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { formatPriceKZA } from './utils/formatPrice';
 import { uploadProductImageFiles } from './utils/uploadProductImage';
+import { supabase } from './supabase'; // Assuming supabase client is exported from here
+import EditProductModal from './EditProductModal';
 
 export default function SellerDashboard({
   authUserId,
@@ -23,6 +25,8 @@ export default function SellerDashboard({
     preco_original: '',
     categoria: 'produtos',
   });
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
     return () => {
@@ -95,6 +99,31 @@ export default function SellerDashboard({
       alert(msg);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUpdateProduct = async (productId, updatedData) => {
+    setIsSubmitting(true);
+    setSuccessMessage('');
+    try {
+      const cleanedProductId = productId.startsWith('supabase-') ? productId.substring('supabase-'.length) : productId;
+      const { error } = await supabase
+        .from('produtos')
+        .update(updatedData)
+        .eq('id', cleanedProductId);
+
+      if (error) throw error;
+
+      setSuccessMessage('Produto atualizado com sucesso!');
+      // You might want to refresh the userProducts list here if it's not automatically updated
+      // e.g., by calling an `onProductUpdated` prop or refetching `userProducts`
+    } catch (err) {
+      console.error(err);
+      alert(err?.message ?? 'Não foi possível atualizar o produto. Tente novamente.');
+    } finally {
+      setIsSubmitting(false);
+      setIsEditModalOpen(false); // Close the edit modal
+      setEditingProduct(null); // Clear the editing product
     }
   };
 
@@ -282,6 +311,17 @@ export default function SellerDashboard({
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
+                        disabled={isSubmitting}
+                        onClick={() => {
+                          setEditingProduct(product);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
                         disabled={isSubmitting || !onDeleteProduct}
                         onClick={() => handleDelete(product)}
                         className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-60"
@@ -326,6 +366,12 @@ export default function SellerDashboard({
           </div>
         </div>
       </motion.div>
+        <EditProductModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          product={editingProduct}
+          onUpdateProduct={handleUpdateProduct}
+        />
     </motion.div>
   );
 }
