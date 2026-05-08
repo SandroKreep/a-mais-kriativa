@@ -539,6 +539,12 @@ function App() {
     setSupabaseProducts((prev) => prev.filter((p) => p.sourceId !== product.sourceId));
   };
 
+  const handleUpdateProductInList = (updatedProduct) => {
+    setSupabaseProducts((prev) =>
+      prev.map((p) => (p.sourceId === updatedProduct.sourceId ? updatedProduct : p))
+    );
+  };
+
   const handleAddToCart = (product) => {
     if (!user) {
       setIsLoginRequiredOpen(true);
@@ -987,6 +993,7 @@ function App() {
           onClose={() => setIsSellerDashboardOpen(false)}
           onCreateProduct={handleCreateProduct}
           onDeleteProduct={handleDeleteProduct}
+          onUpdateProduct={handleUpdateProductInList}
         />
       )}
     </div>

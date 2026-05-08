@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { storage } from './utils/storage';
+import { supabase } from './supabase';
 
 export default function ProductUploadForm({ user, onProductAdd, onProductUpdate, initialData = null, onClose }) {
   const isEditing = Boolean(initialData);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
     price: initialData?.price || '',
@@ -15,6 +17,16 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
   });
 
   const categories = ['Produtos', 'Websites', 'Personalização', 'Serviços'];
+
+  const mapCategoryToDb = (displayCategory) => {
+    const map = {
+      'Produtos': 'produtos',
+      'Websites': 'websites',
+      'Personalização': 'personalizacao',
+      'Serviços': 'servicos',
+    };
+    return map[displayCategory] || 'servicos';
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -37,10 +49,12 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
 
-    const productPayload = {
+    try {
+      const productPayload = {
       userId: initialData?.userId || user?.id,
       ...formData,
       price: parseFloat(formData.price),
@@ -52,26 +66,82 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
     };
 
     if (isEditing) {
-      const updatedProduct = storage.updateProduct(initialData.id, productPayload);
-      if (updatedProduct) {
-        onProductUpdate(updatedProduct);
+      // Atualizar a tabela produtos no Supabase
+      const updatePayload = {
+        nome: formData.name,
+        descricao: formData.description,
+        preco: parseFloat(formData.price),
+        preco_original: parseFloat(formData.originalPrice) || parseFloat(formData.price),
+        categoria: mapCategoryToDb(formData.category),
+        imagem_url: formData.image || initialData.image,
+      };
+
+      const { error: updateError } = await supabase
+        .from('produtos')
+        .update(updatePayload)
+        .eq('id', initialData.sourceId)
+        .eq('vendedor_id', user.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
       }
+
+      // Log da edição para histórico (opcional)
+      const editedProductPayload = {
+        produto_id: initialData.sourceId,
+        nome: formData.name,
+        descricao: formData.description,
+        preco: parseFloat(formData.price),
+        categoria: mapCategoryToDb(formData.category),
+        imagem_url: formData.image ? [formData.image] : null,
+        vendedor_id: user.id,
+        editado_em: new Date().toISOString(),
+      };
+
+      await supabase.from('produtos_editados').insert([editedProductPayload]).then(({ error }) => {
+        if (error) console.warn('Aviso ao registar edição:', error.message);
+      });
+
+      // Atualizar local storage para UI imediata
+      const updatedProduct = storage.updateProduct(initialData.id, productPayload);
+      
+      // Preparar dados atualizados para passar ao App
+      const updatedSupabaseProduct = {
+        ...initialData,
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        originalPrice: parseFloat(formData.originalPrice) || parseFloat(formData.price),
+        category: formData.category,
+        image: formData.image || initialData.image,
+      };
+      
+      if (updatedProduct) {
+        onProductUpdate(updatedSupabaseProduct);
+      }
+      
+      alert('Produto atualizado com sucesso!');
       onClose();
-      return;
     }
 
-    const savedProduct = storage.addProduct(productPayload);
-    onProductAdd(savedProduct);
+      const savedProduct = storage.addProduct(productPayload);
+      onProductAdd(savedProduct);
 
-    setFormData({
-      name: '',
-      price: '',
-      originalPrice: '',
-      category: 'Produtos',
-      description: '',
-      image: '',
-      phone: user?.phone || '',
-    });
+      setFormData({
+        name: '',
+        price: '',
+        originalPrice: '',
+        category: 'Produtos',
+        description: '',
+        image: '',
+        phone: user?.phone || '',
+      });
+    } catch (error) {
+      console.error('Erro ao salvar produto:', error);
+      alert('Erro ao salvar produto: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -191,7 +261,6 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    required
                     className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary transition-colors text-sm"
                     placeholder="+244 9XX XXX XXX"
                   />
@@ -252,12 +321,27 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
 
               {/* Submit Button */}
               <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={!isSaving ? { scale: 1.02 } : {}}
+                whileTap={!isSaving ? { scale: 0.98 } : {}}
                 type="submit"
-                className="w-full bg-primary text-white py-3 rounded-xl font-bold text-sm sm:text-base transition-all hover:bg-blue-700 mt-6"
+                disabled={isSaving}
+                className={`w-full py-3 rounded-xl font-bold text-sm sm:text-base transition-all mt-6 flex items-center justify-center gap-2 ${
+                  isSaving
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-primary text-white hover:bg-blue-700'
+                }`}
               >
-                {isEditing ? 'Salvar Alterações' : 'Adicionar Produto'}
+                {isSaving ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Salvando...
+                  </>
+                ) : (
+                  isEditing ? 'Salvar Alterações' : 'Adicionar Produto'
+                )}
               </motion.button>
             </form>
           </div>

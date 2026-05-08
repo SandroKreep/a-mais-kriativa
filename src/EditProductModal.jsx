@@ -1,118 +1,116 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadProductImageFiles } from './utils/uploadProductImage'; // Assuming this utility exists
+import { supabase } from './supabase';
 
-export default function EditProductModal({ isOpen, onClose, product, onUpdateProduct }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function EditProductModal({ product, isOpen, onClose, onProductUpdate, user }) {
+  const [isSaving, setIsSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [formData, setFormData] = useState({
-    nome: '',
-    descricao: '',
-    preco: '',
-    preco_original: '',
-    categoria: 'produtos',
+    nome: product?.name || '',
+    preco: product?.price || '',
+    preco_original: product?.originalPrice || '',
+    categoria: product?.rawCategory || product?.category || 'Produtos',
+    descricao: product?.description || '',
+    imagem_url: product?.image || '',
   });
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [selectedImageFiles, setSelectedImageFiles] = useState([]);
-  const fileInputRef = useRef(null);
 
-  const allowedCategories = ['produtos', 'websites', 'personalizacao', 'servicos', 'camisetas'];
+  const [newImages, setNewImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState(product?.image ? [product.image] : []);
 
+  const categories = ['produtos', 'websites', 'personalizacao', 'servicos'];
+
+  // Esconder mensagem de sucesso após 3 segundos
   useEffect(() => {
-    if (product) {
-      setFormData({
-        nome: product.name || '',
-        descricao: product.description || '',
-        preco: product.price || '',
-        preco_original: product.original_price || '',
-        categoria: product.category || 'produtos',
-      });
-      // Initialize image previews if product has images
-      if (product.images && product.images.length > 0) {
-        setImagePreviews(product.images);
-      } else if (product.image) { // Fallback for single image
-        setImagePreviews([product.image]);
-      } else {
-        setImagePreviews([]);
-      }
-      setSelectedImageFiles([]);
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      return () => clearTimeout(timer);
     }
-  }, [product]);
+  }, [successMessage]);
 
+  // Esconder mensagem de erro após 4 segundos
   useEffect(() => {
-    return () => {
-      // Clean up object URLs when component unmounts or imagePreviews change
-      imagePreviews.forEach((previewUrl) => {
-        if (previewUrl.startsWith('blob:')) {
-          URL.revokeObjectURL(previewUrl);
-        }
-      });
-    };
-  }, [imagePreviews]);
+    if (errorMessage) {
+      const timer = setTimeout(() => {
+        setErrorMessage('');
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [errorMessage]);
 
   const handleChange = (e) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
-    const hasInvalid = files.some((file) => !file.type.startsWith('image/'));
-    if (hasInvalid) {
-      alert('Todos os ficheiros selecionados devem ser imagens.');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
-
-    // Revoke old blob URLs before creating new ones
-    imagePreviews.forEach((previewUrl) => {
-      if (previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      }
-    });
-    setSelectedImageFiles(files);
-    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
+    setNewImages(files);
+    const previews = files.map((file) => URL.createObjectURL(file));
+    setImagePreviews(previews);
   };
 
-  const clearImageSelection = () => {
-    imagePreviews.forEach((previewUrl) => {
-      if (previewUrl.startsWith('blob:')) {
-        URL.revokeObjectURL(previewUrl);
-      } 
-    });
-    setSelectedImageFiles([]);
-    setImagePreviews([]);
-    if (fileInputRef.current) fileInputRef.current.value = '';
+  const removeImage = (index) => {
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      let updatedImageUrls = product.images || (product.image ? [product.image] : []);
+    setIsSaving(true);
 
-      if (selectedImageFiles.length > 0) {
-        // Upload new images if selected
-        const newImageUrls = await uploadProductImageFiles(selectedImageFiles, product.user_id);
-        updatedImageUrls = newImageUrls;
-      } else if (imagePreviews.length === 0 && (product.images || product.image)) {
-        // If no new images are selected and existing images are cleared
-        updatedImageUrls = [];
+    try {
+      // Atualizar produto no Supabase
+      const updatePayload = {
+        nome: formData.nome,
+        descricao: formData.descricao,
+        preco: parseFloat(formData.preco),
+        preco_original: parseFloat(formData.preco_original) || parseFloat(formData.preco),
+        categoria: formData.categoria,
+        imagem_url: formData.imagem_url || product.image,
+      };
+
+      const { error: updateError } = await supabase
+        .from('produtos')
+        .update(updatePayload)
+        .eq('id', product.sourceId)
+        .eq('vendedor_id', user.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
       }
 
-      await onUpdateProduct(product.id, {
-        ...formData,
-        preco: Number(formData.preco),
-        preco_original: formData.preco_original ? Number(formData.preco_original) : Number(formData.preco),
-        imagem_url: updatedImageUrls[0] || null, // For backward compatibility if single image is expected
-        imagens: updatedImageUrls,
-      });
-      onClose(); // Close modal on successful update
-    } catch (err) {
-      console.error(err);
-      alert(err?.message ?? 'Não foi possível atualizar o produto. Tente novamente.');
+      // Preparar dados atualizados
+      const updatedProduct = {
+        ...product,
+        name: formData.nome,
+        description: formData.descricao,
+        price: parseFloat(formData.preco),
+        originalPrice: parseFloat(formData.preco_original) || parseFloat(formData.preco),
+        category: formData.categoria,
+        rawCategory: formData.categoria,
+        image: formData.imagem_url || product.image,
+      };
+
+      onProductUpdate(updatedProduct);
+      setSuccessMessage('Produto atualizado com sucesso!');
+      
+      // Fechar modal após 2 segundos
+      setTimeout(() => {
+        onClose();
+      }, 2000);
+    } catch (error) {
+      console.error('Erro ao atualizar produto:', error);
+      setErrorMessage('Erro ao atualizar produto: ' + error.message);
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
@@ -120,110 +118,271 @@ export default function EditProductModal({ isOpen, onClose, product, onUpdatePro
 
   return (
     <AnimatePresence>
-      {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black bg-opacity-50 p-4 sm:items-center"
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white rounded-2xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
         >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.3 }}
-            className="relative flex max-h-[90vh] w-full max-w-2xl flex-col self-center overflow-hidden rounded-3xl bg-white shadow-soft-lg"
-          >
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+          {/* Close Button */}
+          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+            <h2 className="text-xl font-bold text-gray-900">Editar Produto</h2>
+            <button
               onClick={onClose}
-              type="button"
-              className="absolute right-3 top-3 z-20 rounded-full bg-gray-100 p-2 transition-colors hover:bg-gray-200"
-              aria-label="Fechar"
+              className="text-gray-500 hover:text-gray-700"
             >
-              <svg className="h-6 w-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </motion.button>
+            </button>
+          </div>
 
-            <div className="shrink-0 border-b border-gray-100 bg-white px-4 py-3 pr-14 sm:px-6 sm:py-4 sm:pr-16">
-              <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Editar Produto</h2>
-              <p className="mt-0.5 text-xs text-gray-600 sm:text-sm">
-                Ajuste os detalhes do seu produto
-              </p>
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <p className="text-gray-600 text-sm mb-4">Ajuste os detalhes do seu produto</p>
+
+            {/* Nome */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nome do Produto
+              </label>
+              <input
+                type="text"
+                name="nome"
+                value={formData.nome}
+                onChange={handleChange}
+                required
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                placeholder="Ex: Cartier Panthère"
+              />
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6 sm:py-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input name="nome" value={formData.nome} onChange={handleChange} required placeholder="Nome do produto" className="w-full px-4 py-2 border rounded-lg text-sm" />
-                  <select name="categoria" value={formData.categoria} onChange={handleChange} className="w-full px-4 py-2 border rounded-lg text-sm">
-                    <option value="produtos">Produtos</option>
-                    <option value="websites">Websites</option>
-                    <option value="personalizacao">Personalização</option>
-                    <option value="servicos">Serviços</option>
-                    <option value="camisetas">Camisetas</option>
-                  </select>
-                  <input type="number" min="0" step="0.01" name="preco" value={formData.preco} onChange={handleChange} required placeholder="Preço" className="w-full px-4 py-2 border rounded-lg text-sm" />
-                  <input type="number" min="0" step="0.01" name="preco_original" value={formData.preco_original} onChange={handleChange} placeholder="Preço Original (Opcional)" className="w-full px-4 py-2 border rounded-lg text-sm" />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">Imagens do produto</label>
+            {/* Categoria e Preço em uma linha */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Categoria
+                </label>
+                <select
+                  name="categoria"
+                  value={formData.categoria}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Preço (KZA)
+                </label>
+                <input
+                  type="number"
+                  name="preco"
+                  value={formData.preco}
+                  onChange={handleChange}
+                  required
+                  step="1000"
+                  className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                  placeholder="72000"
+                />
+              </div>
+            </div>
+
+            {/* Preço Original */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Preço Original (Opcional)
+              </label>
+              <input
+                type="number"
+                name="preco_original"
+                value={formData.preco_original}
+                onChange={handleChange}
+                step="1000"
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                placeholder="Deixe em branco se igual ao preço"
+              />
+            </div>
+
+            {/* Imagens */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Imagens do produto
+              </label>
+              <div className="mb-3">
+                <label className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg cursor-pointer hover:bg-blue-700 transition text-sm font-semibold">
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Escolher Ficheiros
                   <input
-                    ref={fileInputRef}
                     type="file"
-                    accept="image/*"
                     multiple
+                    accept="image/*"
                     onChange={handleImageSelect}
-                    className="block w-full text-sm text-gray-600 file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-blue-700"
+                    className="hidden"
                   />
-                  <p className="text-xs text-gray-500">Selecione novas imagens para substituir as existentes (JPEG, PNG, WebP ou GIF até 5 MB cada).</p>
-                  {imagePreviews.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-xs text-gray-600 mb-1">Pré-visualização</p>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {imagePreviews.map((previewUrl, index) => (
+                </label>
+              </div>
+
+              {imagePreviews.length > 0 && (
+                <div>
+                  <p className="text-xs text-gray-600 mb-2">
+                    Selecione novas imagens para substituir as existentes (JPEG, PNG, WebP ou GIF até 5 MB cada).
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-gray-700 mb-2">Pré-visualização</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative">
                           <img
-                            key={`${previewUrl}-${index}`}
-                            src={previewUrl}
-                            alt={`Pré-visualização ${index + 1}`}
-                            className="h-24 w-full rounded-lg border border-gray-200 object-cover bg-gray-100"
+                            src={preview}
+                            alt={`Preview ${idx}`}
+                            className="w-full h-24 object-cover rounded"
                           />
-                        ))}
-                      </div>
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    {newImages.length > 0 && (
                       <button
                         type="button"
-                        onClick={clearImageSelection}
-                        className="mt-2 text-xs text-red-600 underline hover:text-red-800"
+                        onClick={() => {
+                          setImagePreviews([]);
+                          setNewImages([]);
+                        }}
+                        className="text-xs text-red-600 hover:text-red-700 mt-2 font-semibold"
                       >
                         Remover todas as imagens
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-                <textarea name="descricao" value={formData.descricao} onChange={handleChange} rows="3" required placeholder="Descrição do produto" className="w-full px-4 py-2 border rounded-lg text-sm" />
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="flex-1 rounded-xl border border-gray-300 bg-white py-3 text-sm font-bold text-gray-700 transition-colors hover:bg-gray-100 sm:flex-none sm:px-6"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-60 sm:flex-none sm:px-6"
-                  >
-                    {isSubmitting ? 'A Guardar...' : 'Guardar Alterações'}
-                  </button>
-                </div>
-              </form>
+              )}
+            </div>
+
+            {/* Descrição */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Descrição
+              </label>
+              <textarea
+                name="descricao"
+                value={formData.descricao}
+                onChange={handleChange}
+                required
+                rows="3"
+                className="w-full px-3 py-2 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-primary text-sm"
+                placeholder="Descreva seu produto em detalhes..."
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving}
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition ${
+                  isSaving
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-primary text-white hover:bg-blue-700'
+                }`}
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Salvando...
+                  </>
+                ) : (
+                  'Guardar Alterações'
+                )}
+              </button>
+            </div>
+          </form>
+        </motion.div>
+      </motion.div>
+
+      {/* Notificação de Sucesso */}
+      <AnimatePresence>
+        {successMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-6 left-1/2 z-[60] max-w-sm"
+          >
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-400 rounded-xl p-4 shadow-lg flex items-start gap-3">
+              <div className="flex-shrink-0 pt-0.5">
+                <svg className="w-5 h-5 text-green-600 animate-bounce" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-green-800 text-sm">Sucesso!</p>
+                <p className="text-green-700 text-xs mt-0.5">{successMessage}</p>
+              </div>
             </div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* Notificação de Erro */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-6 left-1/2 z-[60] max-w-sm"
+          >
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 border-2 border-red-400 rounded-xl p-4 shadow-lg flex items-start gap-3">
+              <div className="flex-shrink-0 pt-0.5">
+                <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-red-800 text-sm">Erro</p>
+                <p className="text-red-700 text-xs mt-0.5">{errorMessage}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }

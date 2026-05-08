@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { formatPriceKZA } from './utils/formatPrice';
 import { uploadProductImageFiles } from './utils/uploadProductImage';
-import { supabase } from './supabase'; // Assuming supabase client is exported from here
+import { supabase } from './supabase';
+import ProductUploadForm from './ProductUploadForm';
 import EditProductModal from './EditProductModal';
 
 export default function SellerDashboard({
@@ -12,11 +13,13 @@ export default function SellerDashboard({
   onClose,
   onCreateProduct,
   onDeleteProduct,
+  onUpdateProduct,
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [imagePreviews, setImagePreviews] = useState([]);
   const [selectedImageFiles, setSelectedImageFiles] = useState([]);
+  const [displayedProducts, setDisplayedProducts] = useState(userProducts);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     nome: '',
@@ -33,6 +36,10 @@ export default function SellerDashboard({
       imagePreviews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
     };
   }, [imagePreviews]);
+
+  useEffect(() => {
+    setDisplayedProducts(userProducts);
+  }, [userProducts]);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -136,6 +143,7 @@ export default function SellerDashboard({
     setIsSubmitting(true);
     try {
       await onDeleteProduct(product);
+      setDisplayedProducts((prev) => prev.filter((p) => p.id !== product.id));
       setSuccessMessage('Produto removido com sucesso!');
     } catch (err) {
       console.error(err);
@@ -192,7 +200,7 @@ export default function SellerDashboard({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-2xl">
-              <div className="text-3xl font-bold text-primary mb-2">{userProducts.length}</div>
+              <div className="text-3xl font-bold text-primary mb-2">{displayedProducts.length}</div>
               <p className="text-sm text-gray-700">Produtos Listados</p>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-2xl">
@@ -261,12 +269,12 @@ export default function SellerDashboard({
           {/* Products List */}
           <div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">
-              Seus Produtos ({userProducts.length})
+              Seus Produtos ({displayedProducts.length})
             </h3>
 
-            {userProducts.length > 0 ? (
+            {displayedProducts.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {userProducts.map((product) => (
+                {displayedProducts.map((product) => (
                   <motion.div
                     key={product.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -366,12 +374,27 @@ export default function SellerDashboard({
           </div>
         </div>
       </motion.div>
+      {isEditModalOpen && editingProduct && (
         <EditProductModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
           product={editingProduct}
-          onUpdateProduct={handleUpdateProduct}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+          onProductUpdate={(updatedProduct) => {
+            if (onUpdateProduct) {
+              onUpdateProduct(updatedProduct);
+            }
+            setDisplayedProducts((prev) =>
+              prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+            );
+            setIsEditModalOpen(false);
+            setEditingProduct(null);
+          }}
+          user={userProfile}
         />
+      )}
     </motion.div>
   );
 }
