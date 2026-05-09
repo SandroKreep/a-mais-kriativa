@@ -67,13 +67,16 @@ export default function EditProductModal({ product, isOpen, onClose, onProductUp
     setIsSaving(true);
 
     try {
+      // Converter categoria para minúsculas (formato esperado pelo banco)
+      const categoriaNormalizada = formData.categoria.toLowerCase();
+
       // Atualizar produto no Supabase
       const updatePayload = {
         nome: formData.nome,
         descricao: formData.descricao,
         preco: parseFloat(formData.preco),
         preco_original: parseFloat(formData.preco_original) || parseFloat(formData.preco),
-        categoria: formData.categoria,
+        categoria: categoriaNormalizada,
         imagem_url: formData.imagem_url || product.image,
       };
 
@@ -95,7 +98,7 @@ export default function EditProductModal({ product, isOpen, onClose, onProductUp
         price: parseFloat(formData.preco),
         originalPrice: parseFloat(formData.preco_original) || parseFloat(formData.preco),
         category: formData.categoria,
-        rawCategory: formData.categoria,
+        rawCategory: categoriaNormalizada,
         image: formData.imagem_url || product.image,
       };
 
