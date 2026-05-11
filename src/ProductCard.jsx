@@ -13,10 +13,10 @@ export default function ProductCard({ product, onOpen }) {
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3 }}
       onClick={() => onOpen(product)}
-      className="bg-white rounded-2xl shadow-soft overflow-hidden cursor-pointer group h-full flex flex-col hover:shadow-soft-lg transition-shadow"
+      className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft dark:shadow-soft-dark overflow-hidden cursor-pointer group h-full flex flex-col hover:shadow-soft-lg dark:hover:shadow-soft-lg-dark transition-shadow"
     >
       {/* Image Container */}
-      <div className="relative overflow-hidden h-32 sm:h-40 lg:h-48 bg-gray-100">
+      <div className="relative overflow-hidden h-32 sm:h-40 lg:h-48 bg-gray-100 dark:bg-gray-700">
         <motion.img
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.4 }}
@@ -37,7 +37,7 @@ export default function ProductCard({ product, onOpen }) {
         )}
 
         {/* Category Badge */}
-        <div className="absolute top-1 sm:top-2 lg:top-4 left-1 sm:left-2 lg:left-4 bg-white bg-opacity-90 text-gray-700 px-1.5 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-full font-medium text-xs">
+        <div className="absolute top-1 sm:top-2 lg:top-4 left-1 sm:left-2 lg:left-4 bg-white dark:bg-gray-800 bg-opacity-90 dark:bg-opacity-90 text-gray-700 dark:text-gray-300 px-1.5 sm:px-2 lg:px-3 py-0.5 sm:py-1 rounded-full font-medium text-xs">
           {product.category}
         </div>
       </div>
@@ -46,7 +46,7 @@ export default function ProductCard({ product, onOpen }) {
       <div className="p-2 sm:p-4 lg:p-5 flex flex-col flex-grow">
         {/* Rating */}
         <div className="flex items-center gap-1 mb-1 sm:mb-2 lg:mb-3">
-          <span className="text-xs text-gray-500 font-medium">Avaliação</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Avaliação</span>
           <div className="flex">
             {[...Array(5)].map((_, i) => (
               <motion.svg
@@ -54,7 +54,7 @@ export default function ProductCard({ product, onOpen }) {
                 className={`w-2.5 h-2.5 sm:w-3 sm:h-3 lg:w-4 lg:h-4 ${
                   i < Math.round(product.rating)
                     ? 'text-yellow-400'
-                    : 'text-gray-300'
+                    : 'text-gray-300 dark:text-gray-600'
                 }`}
                 aria-hidden
                 fill="currentColor"
@@ -64,16 +64,16 @@ export default function ProductCard({ product, onOpen }) {
               </motion.svg>
             ))}
           </div>
-          <span className="text-xs text-gray-600 ml-0.5 sm:ml-1 lg:ml-2">({product.rating})</span>
+          <span className="text-xs text-gray-600 dark:text-gray-400 ml-0.5 sm:ml-1 lg:ml-2">({product.rating})</span>
         </div>
 
         {/* Product Name */}
-        <h3 className="font-bold text-gray-900 text-xs sm:text-sm lg:text-lg mb-1 sm:mb-2 lg:mb-3 line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-bold text-gray-900 dark:text-white text-xs sm:text-sm lg:text-lg mb-1 sm:mb-2 lg:mb-3 line-clamp-2 group-hover:text-primary transition-colors">
           {product.name}
         </h3>
 
         {/* Description */}
-        <p className="text-xs text-gray-600 mb-2 sm:mb-3 lg:mb-4 line-clamp-2 flex-grow">
+        <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 sm:mb-3 lg:mb-4 line-clamp-2 flex-grow">
           {product.description}
         </p>
 
@@ -81,7 +81,7 @@ export default function ProductCard({ product, onOpen }) {
         <div className="flex items-end gap-1 sm:gap-2 lg:gap-3 mb-2 sm:mb-3 lg:mb-4">
           <span className="text-base sm:text-lg lg:text-2xl font-bold text-primary">{formatPriceKZA(price)}</span>
           {original > price && (
-            <span className="text-xs text-gray-500 line-through">{formatPriceKZA(original)}</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 line-through">{formatPriceKZA(original)}</span>
           )}
         </div>
 

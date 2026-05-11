@@ -9,7 +9,7 @@ export default function SearchBar({ searchTerm, setSearchTerm, onCategoryChange,
       transition={{ duration: 0.5 }}
       className="w-full mb-8 sm:mb-12"
     >
-      <div className="bg-white rounded-2xl shadow-soft-md p-4 sm:p-6 md:p-8">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-soft-md dark:shadow-soft-md-dark p-4 sm:p-6 md:p-8">
         {/* Search Input */}
         <div className="mb-4 sm:mb-6">
           <div className="relative">
@@ -18,11 +18,11 @@ export default function SearchBar({ searchTerm, setSearchTerm, onCategoryChange,
               placeholder="Buscar produtos..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 sm:px-6 py-3 sm:py-4 border-2 border-gray-100 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm sm:text-base text-gray-800 placeholder-gray-400"
+              className="w-full px-4 sm:px-6 py-3 sm:py-4 border-2 border-gray-100 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-xl focus:outline-none focus:border-primary transition-colors text-sm sm:text-base text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
             <motion.svg
               whileHover={{ scale: 1.1 }}
-              className="absolute right-4 top-3 sm:top-4 w-5 h-5 sm:w-6 sm:h-6 text-gray-400 cursor-pointer"
+              className="absolute right-4 top-3 sm:top-4 w-5 h-5 sm:w-6 sm:h-6 text-gray-400 dark:text-gray-500 cursor-pointer"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ export default function SearchBar({ searchTerm, setSearchTerm, onCategoryChange,
             </motion.svg>
           </div>
           {searchTerm && (
-            <p className="text-xs sm:text-sm text-gray-500 mt-2">
+            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-2">
               Buscando por: "<span className="font-semibold">{searchTerm}</span>"
             </p>
           )}
@@ -39,7 +39,7 @@ export default function SearchBar({ searchTerm, setSearchTerm, onCategoryChange,
 
         {/* Category Filter */}
         <div>
-          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Categorias</p>
+          <p className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">Categorias</p>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <motion.button
@@ -49,8 +49,8 @@ export default function SearchBar({ searchTerm, setSearchTerm, onCategoryChange,
                 onClick={() => onCategoryChange(category)}
                 className={`px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                   category === selectedCategory
-                    ? 'bg-primary text-white shadow-soft-md'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-primary text-white shadow-soft-md dark:shadow-soft-md-dark'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 {category}

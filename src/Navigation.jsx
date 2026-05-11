@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import ThemeToggle from './components/ThemeToggle';
+import { useTheme } from './hooks/useTheme';
 
 export default function Navigation({ categories, selectedCategory, onCategoryChange, onLoginClick, user, userProfile, canAccessSellerDashboard = false, onLogoutClick, cartCount = 0, onSellerDashboardClick, onCartClick }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <motion.nav
@@ -23,29 +26,10 @@ export default function Navigation({ categories, selectedCategory, onCategoryCha
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold">A+ Kriativa</h1>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4 lg:gap-6 flex-1 mx-8">
-            <div className="flex gap-2 lg:gap-4">
-              {categories.map((category) => (
-                <motion.button
-                  key={category}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onCategoryChange(category)}
-                  className={`px-3 lg:px-4 py-1.5 rounded-lg font-medium text-xs lg:text-sm transition-all ${
-                    category === selectedCategory
-                      ? 'bg-primary text-white'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {category}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-
+          
           {/* Right Menu */}
           <div className="flex items-center gap-2 sm:gap-4">
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <motion.button
               type="button"
               aria-label="Abrir carrinho"
@@ -133,23 +117,6 @@ export default function Navigation({ categories, selectedCategory, onCategoryCha
             className="md:hidden pb-4 border-t border-gray-700"
           >
             <div className="flex flex-col gap-2 mt-4">
-              {categories.map((category) => (
-                <motion.button
-                  key={category}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => {
-                    onCategoryChange(category);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm transition-all text-left ${
-                    category === selectedCategory
-                      ? 'bg-primary text-white'
-                      : 'text-gray-300 hover:text-white'
-                  }`}
-                >
-                  {category}
-                </motion.button>
-              ))}
               <div className="px-4 py-2 text-xs text-gray-300">
                 Carrinho: {cartCount}
               </div>

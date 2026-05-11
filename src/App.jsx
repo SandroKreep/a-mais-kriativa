@@ -673,7 +673,7 @@ function App() {
   }
 
   return (
-    <div className="app-container min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="app-container min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800">
       {/* Navigation */}
       <Navigation
         categories={allCategories}
@@ -711,9 +711,9 @@ function App() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-4"
+          className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4"
         >
-          <h2 className="text-base sm:text-xl font-bold text-gray-800">
+          <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
             {filteredSupabase.length + filteredStatic.length}{' '}
             {selectedCategory !== 'Todos' ? `em ${selectedCategory}` : 'itens encontrados'}
           </h2>
@@ -726,7 +726,7 @@ function App() {
                   setSearchTerm('');
                   setSelectedCategory('Todos');
                 }}
-                className="text-blue-600 font-semibold hover:underline flex items-center gap-1 text-sm"
+                className="text-blue-600 dark:text-blue-400 font-semibold hover:underline flex items-center gap-1 text-sm"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -929,24 +929,24 @@ function App() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'tween', duration: 0.25 }}
-              className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white z-[60] shadow-soft-lg flex flex-col"
+              className="fixed right-0 top-0 h-full w-full sm:w-[420px] bg-white dark:bg-gray-800 z-[60] shadow-soft-lg dark:shadow-soft-lg-dark flex flex-col"
             >
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="font-bold text-gray-900">Carrinho ({cartItems.length})</h3>
-                <button onClick={() => setIsCartDrawerOpen(false)} className="text-gray-500 hover:text-gray-800">Fechar</button>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <h3 className="font-bold text-gray-900 dark:text-white">Carrinho ({cartItems.length})</h3>
+                <button onClick={() => setIsCartDrawerOpen(false)} className="text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">Fechar</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {cartItems.length === 0 ? (
-                  <p className="text-sm text-gray-500">Nenhum produto no carrinho.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum produto no carrinho.</p>
                 ) : (
                   cartItems.map((item) => (
-                    <div key={item.id} className="flex gap-3 border border-gray-100 rounded-xl p-3">
-                      <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover bg-gray-100" />
+                    <div key={item.id} className="flex gap-3 border border-gray-100 dark:border-gray-700 rounded-xl p-3">
+                      <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover bg-gray-100 dark:bg-gray-700" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm text-gray-900 truncate">{item.name}</p>
-                        <p className="text-xs text-gray-500">{formatPriceKZA(item.price)}</p>
-                        <p className="text-xs text-gray-600 mt-1">Qtd: {item.quantidade}</p>
+                        <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{item.name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatPriceKZA(item.price)}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">Qtd: {item.quantidade}</p>
                       </div>
                       <button
                         onClick={() => handleRemoveFromCart(item.id)}
