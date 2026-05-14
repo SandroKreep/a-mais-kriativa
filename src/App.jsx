@@ -7,6 +7,7 @@ import ProductModal from './ProductModal';
 import AuthModal from './AuthModal';
 import SellerDashboard from './SellerDashboard';
 import AdminPage from './AdminPage';
+import AdvancedFilters from './components/AdvancedFilters';
 import { supabase } from './supabase';
 import productsData from './mockData.json';
 import { formatPriceKZA } from './utils/formatPrice';
@@ -152,6 +153,12 @@ function App() {
   const [userProfile, setUserProfile] = useState(null);
   const [supabaseProducts, setSupabaseProducts] = useState([]);
   const [staticRemovedProductIds, setStaticRemovedProductIds] = useState([]);
+  
+  // Advanced filters states
+  const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+  const [minRating, setMinRating] = useState(0);
+  const [sortBy, setSortBy] = useState('relevance');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -376,20 +383,55 @@ function App() {
       product.name.toLowerCase().includes(q) ||
       (product.description || '').toLowerCase().includes(q);
 
+    // Apply advanced filters
+    const applyAdvancedFilters = (product) => {
+      // Price filter
+      const price = Number(product.price) || 0;
+      if (priceRange.min && price < Number(priceRange.min)) return false;
+      if (priceRange.max && price > Number(priceRange.max)) return false;
+      
+      // Rating filter
+      if (minRating > 0 && product.rating < minRating) return false;
+      
+      return true;
+    };
+
+    // Apply sorting
+    const sortProducts = (products) => {
+      const sorted = [...products];
+      switch (sortBy) {
+        case 'price-low':
+          return sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+        case 'price-high':
+          return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+        case 'rating':
+          return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        case 'newest':
+          return sorted.sort((a, b) => (b.sourceId || 0) - (a.sourceId || 0));
+        default:
+          return sorted;
+      }
+    };
+
     const filteredSupa = allProducts.filter((product) => {
       if (product.isStatic) return false;
       if (!matchSearch(product)) return false;
-      return matchesNavCategory(product, selectedCategory);
+      if (!matchesNavCategory(product, selectedCategory)) return false;
+      return applyAdvancedFilters(product);
     });
 
     const filteredStat = allProducts.filter((product) => {
       if (!product.isStatic) return false;
       if (!matchSearch(product)) return false;
-      return matchesNavCategory(product, selectedCategory);
+      if (!matchesNavCategory(product, selectedCategory)) return false;
+      return applyAdvancedFilters(product);
     });
 
-    return { filteredSupabase: filteredSupa, filteredStatic: filteredStat };
-  }, [searchTerm, selectedCategory, allProducts]);
+    return { 
+      filteredSupabase: sortProducts(filteredSupa), 
+      filteredStatic: sortProducts(filteredStat) 
+    };
+  }, [searchTerm, selectedCategory, allProducts, priceRange, minRating, sortBy]);
 
   const handleOpenModal = (product) => {
     setSelectedProduct(product);
@@ -401,6 +443,12 @@ function App() {
         }
       });
     }
+  };
+
+  const handleClearFilters = () => {
+    setPriceRange({ min: '', max: '' });
+    setMinRating(0);
+    setSortBy('relevance');
   };
 
   const handleCloseModal = () => {
@@ -713,10 +761,21 @@ function App() {
           transition={{ delay: 0.3 }}
           className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-700 pb-4"
         >
-          <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
-            {filteredSupabase.length + filteredStatic.length}{' '}
-            {selectedCategory !== 'Todos' ? `em ${selectedCategory}` : 'itens encontrados'}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-base sm:text-xl font-bold text-gray-800 dark:text-white">
+              {filteredSupabase.length + filteredStatic.length}{' '}
+              {selectedCategory !== 'Todos' ? `em ${selectedCategory}` : 'itens encontrados'}
+            </h2>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="text-primary hover:text-blue-700 font-medium text-sm flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 3.293A1 1 0 013 4z" />
+              </svg>
+              Filtros
+            </button>
+          </div>
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
             {searchTerm && (
               <motion.button
@@ -736,6 +795,19 @@ function App() {
             )}
           </div>
         </motion.div>
+
+        {/* Advanced Filters */}
+        {showAdvancedFilters && (
+          <AdvancedFilters
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            minRating={minRating}
+            setMinRating={setMinRating}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            onClearFilters={handleClearFilters}
+          />
+        )}
 
         {/* Grelha: estáticos primeiro; Supabase e skeleton em segundo plano (nunca bloqueia os estáticos) */}
         {filteredSupabase.length > 0 ||
