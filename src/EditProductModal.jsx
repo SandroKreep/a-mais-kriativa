@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from './supabase';
+import { parsePreco } from './utils/formatPrice';
 
 export default function EditProductModal({ product, isOpen, onClose, onProductUpdate, user }) {
   const [isSaving, setIsSaving] = useState(false);
@@ -74,8 +75,8 @@ export default function EditProductModal({ product, isOpen, onClose, onProductUp
       const updatePayload = {
         nome: formData.nome,
         descricao: formData.descricao,
-        preco: parseFloat(formData.preco),
-        preco_original: parseFloat(formData.preco_original) || parseFloat(formData.preco),
+        preco: parsePreco(formData.preco),
+        preco_original: parsePreco(formData.preco_original) || parsePreco(formData.preco),
         categoria: categoriaNormalizada,
         imagem_url: formData.imagem_url || product.image,
       };
@@ -95,8 +96,8 @@ export default function EditProductModal({ product, isOpen, onClose, onProductUp
         ...product,
         name: formData.nome,
         description: formData.descricao,
-        price: parseFloat(formData.preco),
-        originalPrice: parseFloat(formData.preco_original) || parseFloat(formData.preco),
+        price: parsePreco(formData.preco),
+        originalPrice: parsePreco(formData.preco_original) || parsePreco(formData.preco),
         category: formData.categoria,
         rawCategory: categoriaNormalizada,
         image: formData.imagem_url || product.image,

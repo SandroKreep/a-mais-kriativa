@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { formatPriceKZA } from './utils/formatPrice';
+import { formatPriceKZA, parsePreco } from './utils/formatPrice';
 
 
 
@@ -12,9 +12,9 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
 
 
-  const original = Number(product.originalPrice) || 0;
+  const original = parsePreco(product.originalPrice);
 
-  const price = Number(product.price) || 0;
+  const price = parsePreco(product.price);
 
   const discount =
 
@@ -43,6 +43,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
   }, [product.image, product.images]);
 
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [imagemAmpliada, setImagemAmpliada] = useState(false);
 
 
 
@@ -108,7 +109,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
           >
 
-            <div className="bg-white rounded-3xl shadow-soft-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-soft-lg dark:shadow-soft-dark max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 
               {/* Close Button */}
 
@@ -120,11 +121,11 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 onClick={onClose}
 
-                className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors"
+                className="absolute top-4 sm:top-6 right-4 sm:right-6 z-10 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 p-2 rounded-full transition-colors"
 
               >
 
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
 
@@ -136,15 +137,25 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
               {/* Image */}
 
-              <div className="relative h-48 sm:h-96 bg-gray-100 overflow-hidden">
+              <div className="relative h-48 sm:h-96 overflow-hidden">
 
+                {/* Imagem de fundo com blur */}
+                <img
+                  src={currentImage}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover blur-[18px] brightness-[0.6] scale-110"
+                />
+
+                {/* Imagem principal */}
                 <img
 
                   src={currentImage}
 
                   alt={`${product.name} - imagem ${galleryIndex + 1}`}
 
-                  className="w-full h-full object-cover"
+                  className="relative w-full h-full object-contain cursor-zoom-in z-10"
+
+                  onClick={() => setImagemAmpliada(true)}
 
                 />
 
@@ -246,7 +257,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 {/* Category */}
 
-                <div className="inline-block bg-blue-100 text-primary px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4">
+                <div className="inline-block bg-blue-100 dark:bg-blue-900/30 text-primary dark:text-blue-400 px-3 sm:px-4 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4">
 
                   {product.category}
 
@@ -256,7 +267,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 {/* Title */}
 
-                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-4">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4">
 
                   {product.name}
 
@@ -300,7 +311,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                   </div>
 
-                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                  <span className="text-gray-600 dark:text-gray-300 font-semibold text-sm sm:text-base">
 
                     Avaliação: {product.rating} / 5
 
@@ -312,7 +323,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 {/* Description */}
 
-                <p className="text-gray-700 text-sm sm:text-lg mb-6 sm:mb-8 leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-lg mb-6 sm:mb-8 leading-relaxed">
 
                   {product.description}
 
@@ -322,9 +333,9 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 {/* Pricing Section */}
 
-                <div className="bg-gray-50 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8">
 
-                  <p className="text-gray-600 text-xs sm:text-sm mb-2">Preço</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-2">Preço</p>
 
                   <div className="flex items-baseline gap-2 sm:gap-4 flex-wrap">
 
@@ -332,7 +343,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                     {original > price && (
 
-                      <span className="text-lg sm:text-xl text-gray-500 line-through">{formatPriceKZA(original)}</span>
+                      <span className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 line-through">{formatPriceKZA(original)}</span>
 
                     )}
 
@@ -340,7 +351,7 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                   {discount > 0 && (
 
-                    <p className="text-green-600 font-semibold mt-3 text-sm sm:text-base">
+                    <p className="text-green-600 dark:text-green-400 font-semibold mt-3 text-sm sm:text-base">
 
                       Poupa {formatPriceKZA(original - price)}
 
@@ -392,15 +403,15 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
 
 
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+                <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50 p-4 text-sm">
 
-                  <h3 className="font-bold text-gray-900 mb-2">Contacto do Vendedor</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-2">Contacto do Vendedor</h3>
 
-                  <p className="text-gray-700">Email: {product.email || 'Não informado'}</p>
+                  <p className="text-gray-700 dark:text-gray-300">Email: {product.email || 'Não informado'}</p>
 
-                  <p className="text-gray-700">Telefone: {product.telefone || 'Não informado'}</p>
+                  <p className="text-gray-700 dark:text-gray-300">Telefone: {product.telefone || 'Não informado'}</p>
 
-                  <p className="text-gray-700">Localização: {product.localizacao || 'Não informada'}</p>
+                  <p className="text-gray-700 dark:text-gray-300">Localização: {product.localizacao || 'Não informada'}</p>
 
                   {whatsappUrl && (
 
@@ -428,11 +439,11 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
 
                 {/* Additional Info */}
 
-                <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200">
+                <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
 
-                  <h3 className="font-bold text-gray-900 mb-4 text-sm sm:text-base">Por que escolher este produto?</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-white mb-4 text-sm sm:text-base">Por que escolher este produto?</h3>
 
-                  <ul className="space-y-2 sm:space-y-3 text-gray-700 text-xs sm:text-base">
+                  <ul className="space-y-2 sm:space-y-3 text-gray-700 dark:text-gray-300 text-xs sm:text-base">
 
                     <li className="flex items-start gap-2 sm:gap-3">
 
@@ -479,6 +490,26 @@ export default function ProductModal({ product, isOpen, onClose, onAddToCart, on
             </div>
 
           </motion.div>
+
+          {/* Overlay de Imagem Ampliada */}
+          <AnimatePresence>
+            {imagemAmpliada && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setImagemAmpliada(false)}
+                className="fixed inset-0 bg-black/90 z-[9999] flex items-center justify-center cursor-zoom-out"
+              >
+                <img
+                  src={currentImage}
+                  alt={`${product.name} - imagem ampliada`}
+                  className="max-w-[95vw] max-h-[95vh] object-contain"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </>
 

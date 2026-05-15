@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { formatPriceKZA } from './utils/formatPrice';
+import { formatPriceKZA, parsePreco } from './utils/formatPrice';
 import { uploadProductImageFiles } from './utils/uploadProductImage';
 import { supabase } from './supabase';
 import ProductUploadForm from './ProductUploadForm';
@@ -85,8 +85,8 @@ export default function SellerDashboard({
       const imagens = await uploadProductImageFiles(selectedImageFiles, authUserId);
       await onCreateProduct({
         ...formData,
-        preco: Number(formData.preco),
-        preco_original: formData.preco_original ? Number(formData.preco_original) : Number(formData.preco),
+        preco: parsePreco(formData.preco),
+        preco_original: formData.preco_original ? parsePreco(formData.preco_original) : parsePreco(formData.preco),
         imagem_url: imagens[0] || null,
         imagens,
       });

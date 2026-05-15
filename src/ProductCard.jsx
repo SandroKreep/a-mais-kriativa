@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 
 
 
-import { formatPriceKZA } from './utils/formatPrice';
+import { formatPriceKZA, parsePreco } from './utils/formatPrice';
 
 
 
@@ -21,11 +21,11 @@ export default function ProductCard({ product, onOpen }) {
 
 
 
-  const original = Number(product.originalPrice) || 0;
+  const original = parsePreco(product.originalPrice);
 
 
 
-  const price = Number(product.price) || 0;
+  const price = parsePreco(product.price);
 
 
 

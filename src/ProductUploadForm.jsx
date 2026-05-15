@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { storage } from './utils/storage';
 import { supabase } from './supabase';
+import { parsePreco } from './utils/formatPrice';
 
 export default function ProductUploadForm({ user, onProductAdd, onProductUpdate, initialData = null, onClose }) {
   const isEditing = Boolean(initialData);
@@ -57,8 +58,8 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
       const productPayload = {
       userId: initialData?.userId || user?.id,
       ...formData,
-      price: parseFloat(formData.price),
-      originalPrice: parseFloat(formData.originalPrice) || parseFloat(formData.price),
+      price: parsePreco(formData.price),
+      originalPrice: parsePreco(formData.originalPrice) || parsePreco(formData.price),
       rating: 4.5,
       seller: initialData?.seller || user?.company || user?.name,
       phone: formData.phone,
@@ -70,8 +71,8 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
       const updatePayload = {
         nome: formData.name,
         descricao: formData.description,
-        preco: parseFloat(formData.price),
-        preco_original: parseFloat(formData.originalPrice) || parseFloat(formData.price),
+        preco: parsePreco(formData.price),
+        preco_original: parsePreco(formData.originalPrice) || parsePreco(formData.price),
         categoria: mapCategoryToDb(formData.category),
         imagem_url: formData.image || initialData.image,
       };
@@ -91,7 +92,7 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
         produto_id: initialData.sourceId,
         nome: formData.name,
         descricao: formData.description,
-        preco: parseFloat(formData.price),
+        preco: parsePreco(formData.price),
         categoria: mapCategoryToDb(formData.category),
         imagem_url: formData.image ? [formData.image] : null,
         vendedor_id: user.id,
@@ -110,8 +111,8 @@ export default function ProductUploadForm({ user, onProductAdd, onProductUpdate,
         ...initialData,
         name: formData.name,
         description: formData.description,
-        price: parseFloat(formData.price),
-        originalPrice: parseFloat(formData.originalPrice) || parseFloat(formData.price),
+        price: parsePreco(formData.price),
+        originalPrice: parsePreco(formData.originalPrice) || parsePreco(formData.price),
         category: formData.category,
         image: formData.image || initialData.image,
       };

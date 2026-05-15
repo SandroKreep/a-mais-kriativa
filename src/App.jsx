@@ -10,7 +10,7 @@ import AdminPage from './AdminPage';
 import AdvancedFilters from './components/AdvancedFilters';
 import { supabase } from './supabase';
 import productsData from './mockData.json';
-import { formatPriceKZA } from './utils/formatPrice';
+import { formatPriceKZA, parsePreco } from './utils/formatPrice';
 import './index.css';
 
 /** Categoria de navegação interna (tabs do menu) */
@@ -50,8 +50,8 @@ function buildStaticProductsFromMock(data, removedProductIds = []) {
       sourceType: 'product',
       name: p.name,
       description: p.description ?? '',
-      price: Number(p.price) || 0,
-      originalPrice: Number(p.originalPrice ?? p.price) || 0,
+      price: parsePreco(p.price),
+      originalPrice: parsePreco(p.originalPrice ?? p.price),
       category: p.category ?? 'Produtos',
       image: p.image || 'https://via.placeholder.com/600x400?text=A%2B+Kriativa',
       rating: Number(p.rating) || 4.5,
@@ -70,7 +70,7 @@ function buildStaticProductsFromMock(data, removedProductIds = []) {
   (data.customProducts ?? []).forEach((p) => {
     const customId = `static-custom-${p.id}`;
     if (removed.has(customId)) return;
-    const price = Number(p.basePrice) || 0;
+    const price = parsePreco(p.basePrice);
     out.push({
       id: customId,
       sourceId: p.id,
@@ -98,7 +98,7 @@ function buildStaticProductsFromMock(data, removedProductIds = []) {
     const serviceId = `static-service-${p.id}`;
     if (removed.has(serviceId)) return;
     const nav = mapServiceToNavCategory(p);
-    const price = Number(p.price) || 0;
+    const price = parsePreco(p.price);
     out.push({
       id: serviceId,
       sourceId: p.id,
@@ -211,8 +211,8 @@ function App() {
       sourceId: product.id,
       name: product.nome,
       description: product.descricao ?? '',
-      price: Number(product.preco) || 0,
-      originalPrice: Number(product.preco_original) || Number(product.preco) || 0,
+      price: parsePreco(product.preco),
+      originalPrice: parsePreco(product.preco_original) || parsePreco(product.preco),
       category: mapCategoryToLabel(product.categoria),
       image: (Array.isArray(product.imagens) && product.imagens[0]) || product.imagem_url || 'https://via.placeholder.com/600x400?text=A%2B+Kriativa',
       images: Array.isArray(product.imagens) && product.imagens.length ? product.imagens : [product.imagem_url].filter(Boolean),
@@ -386,9 +386,9 @@ function App() {
     // Apply advanced filters
     const applyAdvancedFilters = (product) => {
       // Price filter
-      const price = Number(product.price) || 0;
-      if (priceRange.min && price < Number(priceRange.min)) return false;
-      if (priceRange.max && price > Number(priceRange.max)) return false;
+      const price = parsePreco(product.price);
+      if (priceRange.min && price < parsePreco(priceRange.min)) return false;
+      if (priceRange.max && price > parsePreco(priceRange.max)) return false;
       
       // Rating filter
       if (minRating > 0 && product.rating < minRating) return false;
